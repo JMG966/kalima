@@ -43,8 +43,9 @@ Ce qu'elle fait, et SEULEMENT cela :
      Mémoire du navigateur (IndexedDB) : les données extraites du dernier
      PDF lu sont gardées (clé : nom, taille, date, nombre de pages) ; le même
      PDF rouvert est repris en quelques secondes.
-     Clic sur une occurrence : visionneuse du PDF (page par page, résultat par
-     résultat, arbre des signets à gauche qui suit la page) ; sur chaque page,
+     Clic sur une occurrence : visionneuse du PDF (défilement continu des pages
+     depuis le 13/11/2026, dessinées à la demande ; résultat par résultat,
+     arbre des signets à gauche qui suit la page) ; sur chaque page,
      tous les résultats de la liste affichée encadrés en rouge et les vedettes
      de leurs entrées à la couleur de leur type.
      Le fichier est lu DANS le navigateur : il n'est ni envoyé ni modifié.
@@ -345,8 +346,17 @@ button.secondaire { background: var(--accent-doux); color: var(--accent); font-w
 #scanTitre { margin: 8px 0 6px; font-size: 15px; }
 #scanTitre bdi { font-size: 18px; }
 #scanCadre { flex: 1; overflow: auto; min-height: 0; background: var(--fond); border-radius: 6px; }
-#scanPage { position: relative; margin: 0 auto; }
-#scanCanvas { display: block; }
+/* défilement continu : pages les unes sous les autres, dessinées à la demande */
+#scanPages { position: relative; padding: 4px 0; }
+.pv { position: relative; margin: 0 auto 10px; background: #fff; box-shadow: 0 1px 4px rgba(0,0,0,.25); }
+.pv canvas { display: block; }
+/* cadres posés sur la page : vedettes, résultats, repère du signet */
+.surcouche { position: absolute; inset: 0; pointer-events: none; z-index: 1; }
+.surcouche > div { position: absolute; box-sizing: border-box; }
+.surcouche .vedette { border: 2.5px solid; }
+.surcouche .occ { border: 1.5px solid #d0021b; background: rgba(255, 230, 0, .2); }
+.surcouche .occ.choisi { border-width: 3px; background: rgba(255, 230, 0, .45); }
+.surcouche .occ.derivee { border-style: dashed; }
 /* couche de texte invisible posée sur la page (pdf.js) : permet de
    sélectionner et copier le texte ; règles reprises de pdf_viewer.css */
 .textLayer { position: absolute; inset: 0; overflow: hidden; line-height: 1; text-align: initial;
@@ -357,10 +367,9 @@ button.secondaire { background: var(--accent-doux); color: var(--accent); font-w
 .textLayer .endOfContent { display: block; position: absolute; inset: 100% 0 0; z-index: -1; cursor: default; user-select: none; }
 .textLayer.selecting .endOfContent { top: 0; }
 /* repère du signet cliqué dans l'arbre : cadre bleu épais qui clignote deux fois */
-#repere { position: absolute; border: 4px solid #1f5fd6; border-radius: 4px; box-shadow: 0 0 0 2px rgba(255,255,255,.8); pointer-events: none; }
-#repere.clignote { animation: clignote .45s ease-in-out 0s 4 alternate; }
+.surcouche .repere { border: 4px solid #1f5fd6; border-radius: 4px; box-shadow: 0 0 0 2px rgba(255,255,255,.8); }
+.surcouche .repere.clignote { animation: clignote .45s ease-in-out 0s 4 alternate; }
 @keyframes clignote { from { opacity: 1; } to { opacity: .1; } }
-#repere.cache { display: none; }
 .scan-pied { font-size: 12.5px; color: var(--doux); }
 .visio-bas { display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; gap: 12px; margin-top: 8px; }
 .visio-bas .groupe { display: flex; align-items: center; gap: 6px; }
@@ -644,7 +653,7 @@ header .logo { transition: opacity .25s ease; }
   <div class="modal" role="dialog" aria-modal="true" aria-labelledby="titre-apropos">
     <h2 id="titre-apropos">À propos</h2>
     <div class="aide">
-    <p>Version : 20261113_0729</p>
+    <p>Version : 20261113_0814</p>
     <p class="chapeau"><b>Kalima</b> (<span lang="ar" dir="rtl">كلمة</span>, « mot ») recherche et compte les mots, français
       ou arabes, d'un document, et montre chaque occurrence dans son contexte et à sa place dans la page.</p>
     <h3>Son histoire</h3>
@@ -787,7 +796,8 @@ header .logo { transition: opacity .25s ease; }
       <li><b>Encadrements</b> : chaque résultat présent sur la page est encadré en rouge, celui choisi plus fortement ;
         trait plein pour la forme exacte, pointillés pour les formes dérivées ; un mot coupé en fin de ligne l'est en
         deux morceaux. Pour le Kazimirski, la vedette de l'entrée est encadrée à la couleur de son type.</li>
-      <li><b>Naviguer</b> : page par page (◀ ▶, flèches ← → du clavier, ou numéro de page), de résultat en résultat
+      <li><b>Naviguer</b> : les pages se suivent, on les fait <b>défiler</b> à la molette, au pavé tactile ou au doigt ;
+        on peut aussi sauter de page en page (◀ ▶, flèches ← → du clavier, ou numéro de page), de résultat en résultat
         (« ◀ résultat », « résultat ▶ »), ou par l'<b>arbre des signets</b>.</li>
       <li><b>Arbre des signets</b> : ▸ déplie une branche ; un clic sur un signet ouvre sa page, où l'endroit visé est
         encadré en bleu et clignote. L'arbre suit la page affichée et n'ouvre que le chemin utile. Sa colonne
@@ -838,8 +848,7 @@ header .logo { transition: opacity .25s ease; }
         </span>
       </div>
       <h2 id="scanTitre"></h2>
-      <div id="scanCadre"><div id="scanPage"><canvas id="scanCanvas"></canvas><div id="scanTexte" class="textLayer"></div>
-        <div id="repere" class="cache"></div></div></div>
+      <div id="scanCadre"><div id="scanPages"></div></div>
       <!-- bas de la visionneuse : sélecteur de pages au centre, légende à gauche -->
       <div class="visio-bas">
         <div id="scanLegende" class="scan-pied"></div>
@@ -2560,6 +2569,7 @@ function ouvrirVisionneuse(o) {
   $("arbre").classList.toggle("cache", !PDF_ARBRE.length);
   if (PDF_ARBRE.length && !$("arbreRacine").children.length) remplirArbre($("arbreRacine"), PDF_ARBRE);
   $("fond-scan").classList.remove("cache");
+  dispositionPages(o ? o.bloc.page : VIS.page);         // pages posées les unes sous les autres
   afficherPage(o ? o.bloc.page : VIS.page, o || null);
 }
 
@@ -2589,14 +2599,27 @@ function boitesOccurrence(o) {
   return sortie;
 }
 
-// Couche de texte sélectionnable : le texte de la page tel que la page l'a
+// =====================================================================
+// Visionneuse à défilement continu (13/11/2026)
+// ---------------------------------------------------------------------
+// Toutes les pages sont posées les unes sous les autres dans #scanPages,
+// chacune à sa taille exacte (d'après PDF_PAGES : rien à calculer à
+// l'ouverture, même pour 3 000 pages). Seules les pages visibles et leurs
+// voisines sont dessinées (image, texte sélectionnable, cadres) ; celles
+// qui s'éloignent sont libérées, pour ménager la mémoire (iPad).
+// Les cadres (résultats, vedettes de l'index, repère du signet) sont des
+// cadres posés PAR-DESSUS l'image (.surcouche) : changer de résultat ne
+// redessine pas la page.
+// =====================================================================
+
+// Couche de texte sélectionnable : le texte de la page tel que Kalima l'a
 // lu et réparé (celui qui sert à la recherche, arabe compris), posé,
 // invisible, sur l'image à la taille d'affichage. Chaque morceau est un
 // <span> à sa position, étiré à sa largeur exacte ; fin de ligne = <br>.
 // Ce que l'on copie est donc exactement ce que l'on cherche.
 const mesureTexte = document.createElement("canvas").getContext("2d");
-function coucheTexte(n, echelle) {
-  const couche = $("scanTexte"), pg = PDF_PAGES[n - 1];
+function coucheTexte(n, echelle, couche) {
+  const pg = PDF_PAGES[n - 1];
   couche.textContent = "";
   if (!pg) return;
   couche.style.width = pg.l * echelle + "px"; couche.style.height = pg.h * echelle + "px";
@@ -2609,7 +2632,7 @@ function coucheTexte(n, echelle) {
       sp.style.top = (m.y - (m.h || 10) * 0.85) * echelle + "px";
       sp.style.fontSize = corps + "px";
       sp.style.fontFamily = "serif";
-      if (/[\u0600-\u06FF]/.test(m.s)) sp.dir = "rtl";
+      if (/[؀-ۿ]/.test(m.s)) sp.dir = "rtl";
       mesureTexte.font = corps + "px serif";
       const l = mesureTexte.measureText(m.s).width;
       if (l > 0) sp.style.transform = "scaleX(" + Math.max(0.01, m.w * echelle / l) + ")";
@@ -2623,51 +2646,139 @@ function coucheTexte(n, echelle) {
   morceaux.appendChild(fin);
   couche.appendChild(morceaux);
 }
-$("scanTexte").addEventListener("mousedown", () => $("scanTexte").classList.add("selecting"));
-document.addEventListener("mouseup", () => $("scanTexte").classList.remove("selecting"));
-let rendu = null;                                 // rendu pdf.js en cours (annulé si on change de page)
-async function afficherPage(n, cible, versHaut, depuisArbre) {
-  n = Math.max(1, Math.min(PDF_DOC.numPages, n | 0));
-  VIS.page = n;
-  $("pageNum").value = n;
+document.addEventListener("mousedown", e => {
+  const c = e.target.closest && e.target.closest(".textLayer"); if (c) c.classList.add("selecting");
+});
+document.addEventListener("mouseup", () => document.querySelectorAll(".textLayer.selecting").forEach(c => c.classList.remove("selecting")));
+
+const PAGES_GARDEES = 5;          // pages dessinées gardées de part et d'autre de la page courante
+// état du défilement continu : échelle d'affichage, génération (change à
+// chaque nouvelle disposition : les dessins en cours d'une disposition
+// précédente sont abandonnés), pages dessinées, observateur
+const PV = { echelle: 1, gen: 0, dessinees: new Set(), obs: null, image: 0, programme: 0, sync: null };
+const pageDiv = n => $("scanPages").children[n - 1];
+
+// Pose toutes les pages (vides) à leur taille ; l'échelle « page entière
+// visible » est celle de la page de référence, multipliée par le zoom.
+function dispositionPages(ref) {
+  const cadre = $("scanCadre"), conteneur = $("scanPages"), N = PDF_DOC.numPages;
+  PV.gen++;
+  if (PV.obs) PV.obs.disconnect();
+  for (const n of PV.dessinees) liberer(n);
+  PV.dessinees.clear();
+  const pr = PDF_PAGES[(ref || 1) - 1] || PDF_PAGES[0];
+  const base = Math.min((cadre.clientHeight - 8) / pr.h, (cadre.clientWidth - 8) / pr.l);
+  PV.echelle = base * VIS.zoom;
+  conteneur.textContent = "";
+  const frag = document.createDocumentFragment();
+  for (let n = 1; n <= N; n++) {
+    const pg = PDF_PAGES[n - 1] || pr, d = document.createElement("div");
+    d.className = "pv"; d.dataset.n = n;
+    d.style.width = pg.l * PV.echelle + "px"; d.style.height = pg.h * PV.echelle + "px";
+    frag.appendChild(d);
+  }
+  conteneur.appendChild(frag);
+  // une page entre dans la vue (ou à moins d'une hauteur de vue) : on la dessine
+  PV.obs = new IntersectionObserver(entrees => {
+    for (const e of entrees) if (e.isIntersecting) dessinerPage(+e.target.dataset.n);
+  }, { root: cadre, rootMargin: "100% 0px" });
+  for (const d of conteneur.children) PV.obs.observe(d);
+}
+// Garde la page et la position courantes en refaisant la disposition (zoom,
+// poignée de l'arbre, fenêtre redimensionnée)
+function redisposer() {
+  if (!PDF_DOC || $("fond-scan").classList.contains("cache") || !$("scanPages").children.length) return;
+  const cadre = $("scanCadre"), n = pageCourante(), d = pageDiv(n);
+  const frac = (cadre.scrollTop - d.offsetTop) / d.offsetHeight;
+  dispositionPages(n);
+  const d2 = pageDiv(n);
+  PV.programme = performance.now();
+  cadre.scrollTop = d2.offsetTop + frac * d2.offsetHeight;
+}
+
+async function dessinerPage(n) {
+  if (PV.dessinees.has(n)) return;
+  PV.dessinees.add(n);
+  const gen = PV.gen, d = pageDiv(n);
   const pg = await PDF_DOC.getPage(n);
-  const vp1 = pg.getViewport({ scale: 1 }), cadre = $("scanCadre");
-  const base = Math.min((cadre.clientHeight - 8) / vp1.height, (cadre.clientWidth - 8) / vp1.width);
-  const echelle = base * VIS.zoom, dpr = window.devicePixelRatio || 1, k = echelle * dpr;
-  const vp = pg.getViewport({ scale: k });
-  const cv = $("scanCanvas"), ctx = cv.getContext("2d");
-  if (rendu) { try { rendu.cancel(); } catch (e) {} }
+  if (gen !== PV.gen || !PV.dessinees.has(n)) return;
+  const dpr = window.devicePixelRatio || 1, vp = pg.getViewport({ scale: PV.echelle * dpr });
+  const cv = document.createElement("canvas");
   cv.width = vp.width; cv.height = vp.height;
-  cv.style.width = (vp.width / dpr) + "px"; cv.style.height = (vp.height / dpr) + "px";
-  rendu = pg.render({ canvasContext: ctx, viewport: vp });
-  try { await rendu.promise; } catch (e) { return; }   // rendu annulé : une autre page est demandée
-  rendu = null;
-  coucheTexte(n, echelle);                // texte sélectionnable
-  // cadres : vedettes (couleur du type) puis résultats (rouge)
+  cv.style.width = d.style.width; cv.style.height = d.style.height;
+  const tache = pg.render({ canvasContext: cv.getContext("2d"), viewport: vp });
+  d._tache = tache;
+  try { await tache.promise; } catch (e) { return; }     // dessin annulé (page libérée)
+  d._tache = null;
+  if (gen !== PV.gen || !PV.dessinees.has(n)) return;
+  d.textContent = "";
+  d.appendChild(cv);
+  const couche = document.createElement("div"); couche.className = "textLayer";
+  d.appendChild(couche); coucheTexte(n, PV.echelle, couche);   // texte sélectionnable
+  const sur = document.createElement("div"); sur.className = "surcouche";
+  d.appendChild(sur); cadresPage(n);                           // cadres
+  elaguer();
+}
+function liberer(n) {
+  const d = pageDiv(n);
+  if (!d) return;
+  if (d._tache) { try { d._tache.cancel(); } catch (e) {} d._tache = null; }
+  d.textContent = "";
+}
+// libère les pages dessinées trop loin de la page courante
+function elaguer() {
+  const v = pageCourante();
+  for (const n of [...PV.dessinees]) if (Math.abs(n - v) > PAGES_GARDEES) { PV.dessinees.delete(n); liberer(n); }
+}
+
+// Cadres d'une page dessinée : vedettes (couleur du type) puis résultats
+// (rouge ; trait plein = forme exacte, pointillés = forme dérivée ; le
+// résultat choisi plus épais et plus jaune), puis repère du signet cliqué
+function cadresPage(n) {
+  const d = pageDiv(n), sur = d && d.querySelector(".surcouche");
+  if (!sur) return;
+  sur.textContent = "";
+  const e = PV.echelle;
+  const boite = (classe, x, y, w, h) => {
+    const b = document.createElement("div"); b.className = classe;
+    Object.assign(b.style, { left: x + "px", top: y + "px", width: w + "px", height: h + "px" });
+    sur.appendChild(b); return b;
+  };
   const ici = VIS.parPage.get(n) || [];
   const vedettes = new Set();
   for (const k2 of ici) { const g = VUES[k2].bloc.groupe; if (g && g.page === n) vedettes.add(g); }
   for (const g of vedettes) {
     const [x0, y0, x1, y1] = g.cadre;
-    ctx.lineWidth = 2.5 * dpr; ctx.strokeStyle = "rgb(" + g.rgb.join(",") + ")";
-    ctx.strokeRect(x0 * k - 3 * dpr, y0 * k - 3 * dpr, (x1 - x0) * k + 6 * dpr, (y1 - y0) * k + 6 * dpr);
+    boite("vedette", x0 * e - 3, y0 * e - 3, (x1 - x0) * e + 6, (y1 - y0) * e + 6).style.borderColor = "rgb(" + g.rgb.join(",") + ")";
   }
-  let vise = null;
   for (const k2 of ici) {
     const choisi = k2 === VIS.i;
-    // forme exacte : trait plein ; forme dérivée (féminin, pluriels) : pointillés
     const derivee = VUES[k2].nom && VUES[k2].nom !== "forme exacte" && VUES[k2].nom !== "racine";
-    for (const r of boitesOccurrence(VUES[k2])) {
-      ctx.setLineDash(derivee ? [4 * dpr, 2.5 * dpr] : []);
-      ctx.lineWidth = (choisi ? 3 : 1.5) * dpr; ctx.strokeStyle = "#d0021b";
-      ctx.fillStyle = choisi ? "rgba(255, 230, 0, .45)" : "rgba(255, 230, 0, .2)";
-      ctx.fillRect(r.x * k, r.y * k, r.w * k, r.h * k);
-      ctx.strokeRect(r.x * k, r.y * k, r.w * k, r.h * k);
-      if (choisi && vise === null) vise = r.y * k / dpr;
-    }
+    for (const r of boitesOccurrence(VUES[k2]))
+      boite("occ" + (choisi ? " choisi" : "") + (derivee ? " derivee" : ""), r.x * e, r.y * e, r.w * e, r.h * e);
   }
-  ctx.setLineDash([]);
-  // titre, compteur de résultats, légende
+  const c = VIS.repere && VIS.repere.page === n && VIS.repere.cadre;
+  if (c) {
+    const [x0, y0, x1, y1] = c;
+    const b = boite("repere", x0 * e - 6, y0 * e - 6, (x1 - x0) * e + 12, (y1 - y0) * e + 12);
+    if (VIS.repere.clignote) { b.classList.add("clignote"); VIS.repere.clignote = false; }
+  }
+}
+
+// page courante : celle qui occupe le tiers haut de la vue
+function pageCourante() {
+  const cadre = $("scanCadre"), enf = $("scanPages").children;
+  if (!enf.length) return VIS.page;
+  const y = cadre.scrollTop + cadre.clientHeight * 0.3;
+  let lo = 0, hi = enf.length - 1;
+  while (lo < hi) { const m = (lo + hi + 1) >> 1; if (enf[m].offsetTop <= y) lo = m; else hi = m - 1; }
+  return lo + 1;
+}
+
+// titre, compteurs, légende, boutons ; arbre des signets synchronisé
+// (après un court délai quand c'est le défilement qui change de page)
+function majEtat(n, depuisArbre, parDefilement) {
+  $("pageNum").value = n;
   const o = VIS.i >= 0 ? VUES[VIS.i] : null;
   const surPage = o && o.bloc.page === n;
   $("scanTitre").innerHTML = echap("p. " + n + (surPage ? " · " + o.fasc + " · " + o.seq.replace(/^p\. \d+ · /, "") : " · " + lettreDePageLib(n)))
@@ -2676,28 +2787,53 @@ async function afficherPage(n, cible, versHaut, depuisArbre) {
   $("resPrec").disabled = !VUES.length || VIS.i <= 0;
   $("resSuiv").disabled = !VUES.length || VIS.i >= VUES.length - 1;
   $("pagePrec").disabled = n <= 1; $("pageSuiv").disabled = n >= PDF_DOC.numPages;
+  const ici = VIS.parPage.get(n) || [];
   $("scanLegende").textContent = ici.length
     ? nf(ici.length) + " résultat(s) sur cette page — cadre plein : forme exacte ; pointillés : forme dérivée."
     : "Aucun résultat de la liste sur cette page.";
-  // défilement : vers le résultat choisi, ou vers la hauteur d'un signet
+  clearTimeout(PV.sync);
+  if (depuisArbre) marquer(depuisArbre);
+  else if (parDefilement) PV.sync = setTimeout(() => synchroniserArbre(n, surPage ? o : null), 250);
+  else synchroniserArbre(n, surPage ? o : null);
+}
+// défilement par l'utilisateur : la page courante suit (une fois par image)
+$("scanCadre").addEventListener("scroll", () => {
+  if (PV.image) return;
+  PV.image = requestAnimationFrame(() => {
+    PV.image = 0;
+    if (!PDF_DOC || !$("scanPages").children.length) return;
+    if (performance.now() - PV.programme < 200) return;     // défilement commandé par Kalima lui-même
+    const n = pageCourante();
+    if (n !== VIS.page) { VIS.page = n; majEtat(n, null, true); }
+    elaguer();
+  });
+});
+
+// Amène la page n sous les yeux : sur le résultat choisi (au milieu de la
+// vue), sur le repère du signet cliqué (en haut), à la hauteur d'un signet
+// (versHaut, repère PDF depuis le bas), sinon en haut de la page.
+function afficherPage(n, cible, versHaut, depuisArbre) {
+  if (!PDF_DOC) return;
+  n = Math.max(1, Math.min(PDF_DOC.numPages, n | 0));
+  if (!$("scanPages").children.length) dispositionPages(n);
   // repère du signet cliqué dans l'arbre (gardé tant qu'on reste sur sa page)
-  if (depuisArbre) VIS.repere = { page: n, cadre: cadreDuSignet(depuisArbre.noeud) };
+  if (depuisArbre) VIS.repere = { page: n, cadre: cadreDuSignet(depuisArbre.noeud), clignote: true };
   else if (VIS.repere && VIS.repere.page !== n) VIS.repere = null;
-  const pageDiv = $("scanPage"), rep = $("repere");
-  pageDiv.style.width = cv.style.width;
-  const c = VIS.repere && VIS.repere.cadre;
-  rep.classList.toggle("cache", !c);
-  if (c) {
-    const [x0, y0, x1, y1] = c;
-    Object.assign(rep.style, { left: (x0 * echelle - 6) + "px", top: (y0 * echelle - 6) + "px",
-      width: ((x1 - x0) * echelle + 12) + "px", height: ((y1 - y0) * echelle + 12) + "px" });
-    if (depuisArbre) { rep.classList.remove("clignote"); void rep.offsetWidth; rep.classList.add("clignote"); }
-  }
-  cadre.scrollTop = c ? Math.max(0, c[1] * echelle - 20)                // vedette en haut de la vue
-                  : vise !== null ? Math.max(0, vise - cadre.clientHeight / 2)
-                  : versHaut != null ? Math.max(0, (vp1.height - versHaut) * echelle - 20) : 0;
-  cadre.scrollLeft = c ? Math.max(0, c[0] * echelle - 60) : 0;
-  if (depuisArbre) marquer(depuisArbre); else synchroniserArbre(n, surPage ? o : null);
+  const cadre = $("scanCadre"), d = pageDiv(n), e = PV.echelle;
+  const c = VIS.repere && VIS.repere.page === n && VIS.repere.cadre;
+  let y = 0;
+  if (c) y = c[1] * e - 20;                                    // vedette en haut de la vue
+  else if (cible && cible.bloc && cible.bloc.page === n) {
+    const r = boitesOccurrence(cible)[0];
+    if (r) y = r.y * e - cadre.clientHeight / 2;              // résultat au milieu de la vue
+  } else if (versHaut != null && PDF_PAGES[n - 1]) y = (PDF_PAGES[n - 1].h - versHaut) * e - 20;
+  PV.programme = performance.now();
+  cadre.scrollTop = Math.max(0, d.offsetTop + y);
+  cadre.scrollLeft = c ? Math.max(0, d.offsetLeft + c[0] * e - 60) : 0;
+  VIS.page = n;
+  elaguer();                                                   // pages trop loin libérées
+  for (const p of PV.dessinees) cadresPage(p);                 // choix courant et repère à jour
+  majEtat(n, depuisArbre, false);
 }
 function lettreDePageLib(n) { return BLOCS && BLOCS.pdf ? lettreDePage(n) : ""; }
 
@@ -2707,6 +2843,12 @@ function allerResultat(i) {
   VIS.i = i;
   afficherPage(VUES[i].bloc.page, VUES[i]);
 }
+function zoomer(f) {
+  VIS.zoom = Math.max(0.5, Math.min(4, VIS.zoom * f));
+  redisposer();
+}
+let attenteTaille = null;
+window.addEventListener("resize", () => { clearTimeout(attenteTaille); attenteTaille = setTimeout(redisposer, 200); });
 
 // --- Arbre des signets (déplié à la demande) ---
 // Largeur de l'arbre des signets : réglable en faisant glisser la poignée
@@ -2729,7 +2871,7 @@ function allerResultat(i) {
     if (!depart) return;
     depart = null; poignee.classList.remove("actif");
     try { localStorage.setItem("largeurArbre", parseInt(arbre.style.width)); } catch (e) {}
-    if (PDF_DOC && VIS.page) afficherPage(VIS.page, VIS.i >= 0 ? VUES[VIS.i] : null);   // page redessinée à la nouvelle taille
+    redisposer();                                       // pages remises à la nouvelle taille
   };
   poignee.addEventListener("pointerup", fin);
   poignee.addEventListener("pointercancel", fin);
@@ -2918,8 +3060,8 @@ $("pageSuiv").addEventListener("click", () => afficherPage(VIS.page + 1));
 $("pageNum").addEventListener("change", () => afficherPage(+$("pageNum").value));
 $("resPrec").addEventListener("click", () => allerResultat(VIS.i - 1));
 $("resSuiv").addEventListener("click", () => allerResultat(VIS.i + 1));
-$("scanPlus").addEventListener("click", () => { VIS.zoom = Math.min(4, VIS.zoom * 1.3); afficherPage(VIS.page, VIS.i >= 0 ? VUES[VIS.i] : null); });
-$("scanMoins").addEventListener("click", () => { VIS.zoom = Math.max(0.5, VIS.zoom / 1.3); afficherPage(VIS.page, VIS.i >= 0 ? VUES[VIS.i] : null); });
+$("scanPlus").addEventListener("click", () => zoomer(1.3));
+$("scanMoins").addEventListener("click", () => zoomer(1 / 1.3));
 $("fermer-scan").addEventListener("click", () => $("fond-scan").classList.add("cache"));
 $("fond-scan").addEventListener("click", e => { if (e.target === $("fond-scan")) $("fond-scan").classList.add("cache"); });
 document.addEventListener("keydown", e => {
