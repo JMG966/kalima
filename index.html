@@ -3,9 +3,13 @@
 =============================================================================
 kalima.html  --  Kalima : recherche de texte dans un document, en français et/ou en arabe
 =============================================================================
-Version du 20261026. Page AUTONOME : elle s'ouvre dans le navigateur
+Version du 20261113_2228. Page AUTONOME : elle s'ouvre dans le navigateur
 (Safari, Chrome, Firefox, Edge ; Mac ou Windows), sans Python, sans
-connexion internet, sans aucun autre fichier.
+connexion internet, sans aucun autre fichier. Sur iPad (iPadOS 16.6 ou
+plus récent, écran de 12,9 ou 13 pouces) : publiée en ligne
+(https://jmg966.github.io/kalima/), installable sur l'écran d'accueil.
+Visionneuse (13/11/2026) : zoom par pincement limité à la zone des pages ;
+pages dessinées sous 16 millions de points (limite de Safari sur iPad).
 
 Ce qu'elle fait, et SEULEMENT cela :
   1. Choix du fichier source .odt, .docx ou .pdf (bouton ou glisser-déposer).
@@ -346,6 +350,11 @@ button.secondaire { background: var(--accent-doux); color: var(--accent); font-w
 #scanTitre { margin: 8px 0 6px; font-size: 15px; }
 #scanTitre bdi { font-size: 18px; }
 #scanCadre { flex: 1; overflow: auto; min-height: 0; background: var(--fond); border-radius: 6px; }
+/* (13/11/2026) visionneuse : le navigateur ne zoome plus toute la page au pincement
+   (en-tête, pied, arbre restent fixes) ; seul le défilement est laissé au navigateur,
+   le pincement est traité par Kalima sur la zone des pages (voir « Zoom par pincement ») */
+#fond-scan { touch-action: pan-x pan-y; }
+#scanPages.pince { will-change: transform; }
 /* défilement continu : pages les unes sous les autres, dessinées à la demande */
 #scanPages { position: relative; padding: 4px 0; }
 .pv { position: relative; margin: 0 auto 10px; background: #fff; box-shadow: 0 1px 4px rgba(0,0,0,.25); }
@@ -653,7 +662,7 @@ header .logo { transition: opacity .25s ease; }
   <div class="modal" role="dialog" aria-modal="true" aria-labelledby="titre-apropos">
     <h2 id="titre-apropos">À propos</h2>
     <div class="aide">
-    <p>Version : 20261113_0814</p>
+    <p>Version : 20261113_2228</p>
     <p class="chapeau"><b>Kalima</b> (<span lang="ar" dir="rtl">كلمة</span>, « mot ») recherche et compte les mots, français
       ou arabes, d'un document, et montre chaque occurrence dans son contexte et à sa place dans la page.</p>
     <h3>Son histoire</h3>
@@ -661,10 +670,13 @@ header .logo { transition: opacity .25s ease; }
       Bilitères Initiales de l'Arabe Classique</i> (DiSBIAC), l'ouvrage de Jean-Claude Rolland. Le même besoin est
       ensuite apparu pour le dictionnaire arabe-français de Kazimirski ; c'est alors qu'est venue l'idée d'y intégrer
       une visionneuse, pour voir chaque occurrence directement dans la page.</p>
+    <p>Depuis novembre 2026, Kalima est aussi publié en ligne pour l'iPad.</p>
     <p>Il fonctionne aussi sur tout autre texte en français, en arabe, ou bilingue.</p>
     <h3>Utilisation libre</h3>
-    <p class="astuce">Kalima n'est soumis à aucun droit d'auteur : chacun peut le copier, le modifier et le réutiliser
-      librement. Il est fourni tel quel, sans maintenance de la part de son auteur.</p>
+    <p class="astuce">Le code de Kalima n'est soumis à aucun droit d'auteur : chacun peut le copier, le modifier et le
+      réutiliser librement. Il intègre pdf.js (Mozilla, licence Apache 2.0) et un tracé tiré de la police Amiri (licence
+      SIL OFL), libres eux aussi, à condition de conserver leur mention. Il est fourni tel quel, sans maintenance de la
+      part de son auteur.</p>
     </div>
     <div class="droite"><button id="fermer-apropos">Fermer</button></div>
   </div>
@@ -700,6 +712,8 @@ header .logo { transition: opacity .25s ease; }
     <h3>DiSBIAC</h3>
     <p>Le texte du PDF a été vérifié mot à mot, sur tout le document, contre le texte source de l'auteur : français,
       arabe avec ses signes, et notes.</p>
+    <h3>Sur iPad</h3>
+    <p>Pour un même fichier, les chiffres sont identiques sur iPad et sur ordinateur.</p>
     <h3>Conseil</h3>
     <p>Pour comparer ou publier des chiffres, utilisez toujours le même outil et indiquez lequel. Ne comparez pas un
       compte de Kalima à celui d'un autre logiciel : ils ne mesurent pas la même chose.</p>
@@ -716,7 +730,8 @@ header .logo { transition: opacity .25s ease; }
     <p class="chapeau"><b>Kalima</b> cherche un mot, français ou arabe, dans un document, le compte, et vous montre
       chaque occurrence dans son contexte et, pour un PDF, à sa place dans la page.</p>
     <p class="astuce">Rien à installer, aucune connexion : la page s'ouvre dans n'importe quel navigateur (Safari, Chrome,
-      Firefox, Edge ; Mac ou Windows). Le document est lu sur votre ordinateur : il n'est ni envoyé ni modifié.</p>
+      Firefox, Edge ; Mac, Windows ou iPad, voir 6). Le document est lu sur votre appareil : il n'est ni envoyé ni
+      modifié.</p>
 
     <h3>1. Ouvrir un document</h3>
     <p>Cliquez sur la zone « Choisir un fichier… » ou faites-y glisser votre fichier :</p>
@@ -806,7 +821,8 @@ header .logo { transition: opacity .25s ease; }
         caractères normaux, les simples étapes du chemin en gris, et chaque lettre est suivie du mot reconstitué.</li>
       <li><b>Sélectionner et copier</b> le texte de la page : double-clic sur un mot, ou glisser sur plusieurs lignes.
         Le texte copié est celui que Kalima cherche, arabe compris.</li>
-      <li><b>Zoom</b> avec − et + ; <b>Échap</b> ferme la visionneuse.</li>
+      <li><b>Zoom</b> avec − et +, ou en pinçant (deux doigts sur l'écran ou sur le pavé tactile ; Ctrl + molette avec
+        Chrome, Edge ou Firefox) : seules les pages s'agrandissent. <b>Échap</b> ferme la visionneuse.</li>
     </ul>
 
     <h3>5. Bon à savoir</h3>
@@ -815,6 +831,18 @@ header .logo { transition: opacity .25s ease; }
       <li>Les chiffres de Kalima diffèrent de ceux d'un lecteur PDF ou d'un traitement de texte : ils ne comptent pas
         la même chose : voir <a href="#" data-ouvre="comptes">Comptes et comparaisons</a>.</li>
     </ul>
+
+    <h3>6. Sur iPad</h3>
+    <p>Kalima fonctionne aussi sur iPad. Ouvrez https://jmg966.github.io/kalima/ dans Safari, puis Partager > « Sur
+      l'écran d'accueil ». Ouvert ensuite par son icône, Kalima marche sans connexion et garde sa propre mémoire des
+      documents lus ; une nouvelle version arrive d'elle-même à la première ouverture avec une connexion.</p>
+    <p>Il faut iPadOS 16.6 ou plus récent et un grand écran (iPad de 12,9 ou 13 pouces) ; une version pour écrans plus
+      petits pourra suivre si le besoin s'en fait sentir.</p>
+    <p>Le document doit d'abord se trouver dans l'app Fichiers de l'iPad. Un fichier téléchargé avec Safari y arrive de
+      lui-même (dossier Téléchargements) ; un fichier reçu par courriel ou par message s'y range avec Partager >
+      « Enregistrer dans Fichiers ». Touchez ensuite « Choisir un fichier… » dans Kalima et choisissez le document dans
+      la fenêtre de Fichiers qui s'ouvre. Pour travailler sans connexion, le document doit être sur l'iPad lui-même
+      (« Sur mon iPad », ou téléchargé depuis iCloud Drive).</p>
     </div>
     <div class="droite"><button id="fermer-aide">Fermer</button></div>
   </div>
@@ -870,7 +898,7 @@ header .logo { transition: opacity .25s ease; }
       <h2><span class="num">1</span>Fichier source (.odt, .docx ou .pdf)</h2>
       <label id="depot" for="fichier">
         <div class="grand">Choisir un fichier .odt, .docx ou .pdf</div>
-        <div class="aide">ou le glisser ici — il est lu sur cet ordinateur, rien n'est envoyé ni modifié</div>
+        <div class="aide">ou le glisser ici — il est lu sur cet appareil, rien n'est envoyé ni modifié</div>
       </label>
       <input id="fichier" type="file" accept=".odt,.docx,.pdf,application/pdf,application/vnd.oasis.opendocument.text,application/vnd.openxmlformats-officedocument.wordprocessingml.document">
       <div id="etatFichier" class="etat">Aucun fichier choisi.</div>
@@ -2651,6 +2679,7 @@ document.addEventListener("mousedown", e => {
 });
 document.addEventListener("mouseup", () => document.querySelectorAll(".textLayer.selecting").forEach(c => c.classList.remove("selecting")));
 
+const PIXELS_MAX = 16e6;          // points d'image au plus par page dessinée (limite de Safari sur iPad : 16 777 216)
 const PAGES_GARDEES = 5;          // pages dessinées gardées de part et d'autre de la page courante
 // état du défilement continu : échelle d'affichage, génération (change à
 // chaque nouvelle disposition : les dessins en cours d'une disposition
@@ -2702,7 +2731,14 @@ async function dessinerPage(n) {
   const gen = PV.gen, d = pageDiv(n);
   const pg = await PDF_DOC.getPage(n);
   if (gen !== PV.gen || !PV.dessinees.has(n)) return;
-  const dpr = window.devicePixelRatio || 1, vp = pg.getViewport({ scale: PV.echelle * dpr });
+  // (13/11/2026) plafond : sur iPad, Safari ne dessine plus une image de plus
+  // d'environ 16,7 millions de points (la page resterait blanche au zoom fort) ;
+  // au-delà de PIXELS_MAX, la page est dessinée un peu moins finement, à la
+  // même taille à l'écran
+  const dpr = window.devicePixelRatio || 1;
+  let vp = pg.getViewport({ scale: PV.echelle * dpr });
+  if (vp.width * vp.height > PIXELS_MAX)
+    vp = pg.getViewport({ scale: PV.echelle * dpr * Math.sqrt(PIXELS_MAX / (vp.width * vp.height)) });
   const cv = document.createElement("canvas");
   cv.width = vp.width; cv.height = vp.height;
   cv.style.width = d.style.width; cv.style.height = d.style.height;
@@ -2723,6 +2759,8 @@ function liberer(n) {
   const d = pageDiv(n);
   if (!d) return;
   if (d._tache) { try { d._tache.cancel(); } catch (e) {} d._tache = null; }
+  const cv = d.querySelector("canvas");
+  if (cv) { cv.width = 0; cv.height = 0; }      // mémoire de l'image rendue tout de suite (iPad)
   d.textContent = "";
 }
 // libère les pages dessinées trop loin de la page courante
@@ -2847,6 +2885,108 @@ function zoomer(f) {
   VIS.zoom = Math.max(0.5, Math.min(4, VIS.zoom * f));
   redisposer();
 }
+// ---------------------------------------------------------------------
+// Zoom par pincement (13/11/2026)
+// ---------------------------------------------------------------------
+// Seule la zone des pages s'agrandit : l'en-tête (navigation par résultat),
+// le pied (navigation par page) et l'arbre des signets ne bougent pas.
+// Pendant le geste, les pages déjà dessinées sont agrandies telles quelles
+// (transformation CSS, immédiate, sous les doigts) ; au relâchement, elles
+// sont redessinées nettes à la nouvelle échelle, le point qui était sous les
+// doigts restant sous les doigts.
+// Trois sources du geste :
+//   . iPad : deux doigts sur les pages (événements « touch ») ;
+//   . Safari du Mac : pincement au pavé tactile (événements « gesture ») ;
+//   . Chrome, Edge, Firefox : pincement au pavé tactile ou Ctrl + molette
+//     (événement « wheel » avec ctrlKey).
+// Partout ailleurs dans la visionneuse, le zoom du navigateur est bloqué.
+const PZ = { actif: false, source: "", z0: 1, s: 1, ox: 0, oy: 0, mx0: 0, my0: 0, mx: 0, my: 0, d0: 1, attente: null };
+const visioOuverte = () => !$("fond-scan").classList.contains("cache") && PDF_DOC && $("scanPages").children.length;
+function pzDebut(source, cx, cy) {
+  const sp = $("scanPages"), r = sp.getBoundingClientRect();
+  Object.assign(PZ, { actif: true, source, z0: VIS.zoom, s: 1, mx0: cx, my0: cy, mx: cx, my: cy,
+                      ox: cx - r.left, oy: cy - r.top });          // point sous les doigts, repère des pages
+  sp.classList.add("pince");
+  sp.style.transformOrigin = PZ.ox + "px " + PZ.oy + "px";
+}
+function pzMaj(s, cx, cy) {
+  PZ.s = Math.max(0.5 / PZ.z0, Math.min(4 / PZ.z0, s));             // zoom total entre 0,5 et 4 (comme − et +)
+  PZ.mx = cx; PZ.my = cy;
+  $("scanPages").style.transform = "translate(" + (cx - PZ.mx0) + "px," + (cy - PZ.my0) + "px) scale(" + PZ.s + ")";
+}
+function pzFin() {
+  if (!PZ.actif) return;
+  PZ.actif = false; clearTimeout(PZ.attente);
+  const sp = $("scanPages"), cadre = $("scanCadre");
+  sp.style.transform = ""; sp.style.transformOrigin = ""; sp.classList.remove("pince");
+  if (Math.abs(PZ.s - 1) < 0.01) return;                             // geste sans effet
+  // page et position (en fraction de la page) du point pris sous les doigts
+  const enf = sp.children;
+  let n = 1;
+  for (let k = 0; k < enf.length; k++) { if (enf[k].offsetTop <= PZ.oy) n = k + 1; else break; }
+  const d = enf[n - 1];
+  const fx = (PZ.ox - d.offsetLeft) / d.offsetWidth, fy = (PZ.oy - d.offsetTop) / d.offsetHeight;
+  VIS.zoom = PZ.z0 * PZ.s;
+  dispositionPages(n);                                               // pages reposées à la nouvelle échelle
+  const d2 = pageDiv(n), r = sp.getBoundingClientRect();
+  PV.programme = performance.now();
+  cadre.scrollLeft += r.left + d2.offsetLeft + fx * d2.offsetWidth - PZ.mx;
+  cadre.scrollTop += r.top + d2.offsetTop + fy * d2.offsetHeight - PZ.my;
+  VIS.page = pageCourante();
+  for (const p of PV.dessinees) cadresPage(p);
+  majEtat(VIS.page, null, true);
+}
+(() => {
+  const cadre = $("scanCadre"), fond = $("fond-scan");
+  const milieu = t => [(t[0].clientX + t[1].clientX) / 2, (t[0].clientY + t[1].clientY) / 2];
+  const ecart = t => Math.hypot(t[0].clientX - t[1].clientX, t[0].clientY - t[1].clientY) || 1;
+  // iPad : deux doigts
+  cadre.addEventListener("touchstart", e => {
+    if (e.touches.length !== 2 || !visioOuverte()) return;
+    e.preventDefault();
+    if (PZ.actif) return;
+    const [x, y] = milieu(e.touches);
+    pzDebut("doigts", x, y); PZ.d0 = ecart(e.touches);
+  }, { passive: false });
+  cadre.addEventListener("touchmove", e => {
+    if (!PZ.actif || PZ.source !== "doigts" || e.touches.length < 2) return;
+    e.preventDefault();
+    const [x, y] = milieu(e.touches);
+    pzMaj(ecart(e.touches) / PZ.d0, x, y);
+  }, { passive: false });
+  const finDoigts = e => { if (PZ.actif && PZ.source === "doigts" && e.touches.length < 2) pzFin(); };
+  cadre.addEventListener("touchend", finDoigts);
+  cadre.addEventListener("touchcancel", finDoigts);
+  // Safari (Mac et iPad) : événements « gesture » ; bloqués partout dans la
+  // visionneuse, et utilisés pour le zoom seulement sur le Mac (sur iPad,
+  // les doigts ci-dessus mènent déjà le geste)
+  document.addEventListener("gesturestart", e => {
+    if (!visioOuverte()) return;
+    e.preventDefault();
+    if (!PZ.actif && cadre.contains(e.target) && !("ontouchstart" in window)) pzDebut("geste", e.clientX, e.clientY);
+  }, { passive: false });
+  document.addEventListener("gesturechange", e => {
+    if (!visioOuverte()) return;
+    e.preventDefault();
+    if (PZ.actif && PZ.source === "geste") pzMaj(e.scale, PZ.mx0, PZ.my0);
+  }, { passive: false });
+  document.addEventListener("gestureend", e => {
+    if (!visioOuverte()) return;
+    e.preventDefault();
+    if (PZ.source === "geste") pzFin();
+  }, { passive: false });
+  // Chrome, Edge, Firefox : pincement au pavé tactile ou Ctrl + molette
+  fond.addEventListener("wheel", e => {
+    if (!e.ctrlKey || !visioOuverte()) return;
+    e.preventDefault();                                            // pas de zoom du navigateur dans la visionneuse
+    if (!cadre.contains(e.target)) return;
+    if (!PZ.actif) pzDebut("roue", e.clientX, e.clientY);
+    if (PZ.source !== "roue") return;
+    pzMaj(PZ.s * Math.exp(-e.deltaY / 100), PZ.mx0, PZ.my0);
+    clearTimeout(PZ.attente); PZ.attente = setTimeout(pzFin, 250); // fin du geste : 250 ms sans mouvement
+  }, { passive: false });
+})();
+
 let attenteTaille = null;
 window.addEventListener("resize", () => { clearTimeout(attenteTaille); attenteTaille = setTimeout(redisposer, 200); });
 
