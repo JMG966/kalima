@@ -3,13 +3,14 @@
 =============================================================================
 kalima.html  --  Kalima : recherche de texte dans un document, en français et/ou en arabe
 =============================================================================
-Version du 20261113_2228. Page AUTONOME : elle s'ouvre dans le navigateur
+Version du 20261114_0220. Page AUTONOME : elle s'ouvre dans le navigateur
 (Safari, Chrome, Firefox, Edge ; Mac ou Windows), sans Python, sans
 connexion internet, sans aucun autre fichier. Sur iPad (iPadOS 16.6 ou
 plus récent, écran de 12,9 ou 13 pouces) : publiée en ligne
 (https://jmg966.github.io/kalima/), installable sur l'écran d'accueil.
 Visionneuse (13/11/2026) : zoom par pincement limité à la zone des pages ;
 pages dessinées sous 16 millions de points (limite de Safari sur iPad).
+Infobulles (14/11/2026) : à la souris et à l'approche de l'Apple Pencil, jamais au doigt.
 
 Ce qu'elle fait, et SEULEMENT cela :
   1. Choix du fichier source .odt, .docx ou .pdf (bouton ou glisser-déposer).
@@ -662,7 +663,7 @@ header .logo { transition: opacity .25s ease; }
   <div class="modal" role="dialog" aria-modal="true" aria-labelledby="titre-apropos">
     <h2 id="titre-apropos">À propos</h2>
     <div class="aide">
-    <p>Version : 20261113_2228</p>
+    <p>Version : 20261114_0220</p>
     <p class="chapeau"><b>Kalima</b> (<span lang="ar" dir="rtl">كلمة</span>, « mot ») recherche et compte les mots, français
       ou arabes, d'un document, et montre chaque occurrence dans son contexte et à sa place dans la page.</p>
     <h3>Son histoire</h3>
@@ -3304,8 +3305,14 @@ $("fermer-comptes").addEventListener("click", () => fondComptes.classList.add("c
 fondComptes.addEventListener("click", e => { if (e.target === fondComptes) fondComptes.classList.add("cache"); });
 document.addEventListener("keydown", e => { if (e.key === "Escape") { fondAPropos.classList.add("cache"); fondAide.classList.add("cache"); fondComptes.classList.add("cache"); } });
 // infobulle fabriquee : tout element portant data-bulle="texte"
+// (14/11/2026) Elle sort au survol de la souris et, sur iPad, à l'approche
+// de l'Apple Pencil (avant le contact) ; jamais au doigt : un toucher ne
+// survole rien, l'infobulle ne ferait que clignoter. Événements « pointer »
+// (et non plus « mouse ») : seuls eux disent si c'est une souris, un crayon
+// ou un doigt (pointerType).
 const bulle = $("bulle");
-document.addEventListener("mouseover", e => {
+document.addEventListener("pointerover", e => {
+  if (e.pointerType === "touch") { bulle.classList.remove("visible"); return; }
   const el = e.target.closest("[data-bulle]");
   if (!el) { bulle.classList.remove("visible"); return; }
   bulle.textContent = el.dataset.bulle;
@@ -3317,7 +3324,8 @@ document.addEventListener("mouseover", e => {
   bulle.classList.add("visible");
 });
 document.addEventListener("scroll", () => bulle.classList.remove("visible"), true);
-document.addEventListener("mousedown", () => bulle.classList.remove("visible"));   // un clic efface l'infobulle
+document.addEventListener("pointerdown", () => bulle.classList.remove("visible"));  // un clic, un contact du crayon ou du doigt efface l'infobulle
+document.addEventListener("pointerout", e => { if (!e.relatedTarget) bulle.classList.remove("visible"); });   // souris sortie de la fenêtre, crayon éloigné de l'écran
 // le choix des diacritiques ne s'applique qu'a un mot arabe ; changer de choix relance la recherche
 const MODE = () => document.querySelector("input[name=dia]:checked").value;
 // « Rechercher » et les deux cases : inactifs tant qu'aucun fichier n'est lu
