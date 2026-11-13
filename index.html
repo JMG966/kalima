@@ -3,7 +3,7 @@
 =============================================================================
 kalima.html  --  Kalima : recherche de texte dans un document, en français et/ou en arabe
 =============================================================================
-Version du 20261114_0220. Page AUTONOME : elle s'ouvre dans le navigateur
+Version du 20261114_0537. Page AUTONOME : elle s'ouvre dans le navigateur
 (Safari, Chrome, Firefox, Edge ; Mac ou Windows), sans Python, sans
 connexion internet, sans aucun autre fichier. Sur iPad (iPadOS 16.6 ou
 plus récent, écran de 12,9 ou 13 pouces) : publiée en ligne
@@ -11,6 +11,7 @@ plus récent, écran de 12,9 ou 13 pouces) : publiée en ligne
 Visionneuse (13/11/2026) : zoom par pincement limité à la zone des pages ;
 pages dessinées sous 16 millions de points (limite de Safari sur iPad).
 Infobulles (14/11/2026) : à la souris et à l'approche de l'Apple Pencil, jamais au doigt.
+Export Excel (14/11/2026) : fenêtre « Fichier enregistré » propre à l'iPad.
 
 Ce qu'elle fait, et SEULEMENT cela :
   1. Choix du fichier source .odt, .docx ou .pdf (bouton ou glisser-déposer).
@@ -663,7 +664,7 @@ header .logo { transition: opacity .25s ease; }
   <div class="modal" role="dialog" aria-modal="true" aria-labelledby="titre-apropos">
     <h2 id="titre-apropos">À propos</h2>
     <div class="aide">
-    <p>Version : 20261114_0220</p>
+    <p>Version : 20261114_0537</p>
     <p class="chapeau"><b>Kalima</b> (<span lang="ar" dir="rtl">كلمة</span>, « mot ») recherche et compte les mots, français
       ou arabes, d'un document, et montre chaque occurrence dans son contexte et à sa place dans la page.</p>
     <h3>Son histoire</h3>
@@ -3537,15 +3538,18 @@ function navigateur() {
   const ua = navigator.userAgent;
   const nom = /Edg\//.test(ua) ? "Edge" : /OPR\//.test(ua) ? "Opera" : /Firefox\//.test(ua) ? "Firefox"
             : /Chrome\//.test(ua) ? "Chrome" : /Safari\//.test(ua) ? "Safari" : "";
-  const mac = /Macintosh|Mac OS X/.test(ua);
-  return { nom, mac };
+  // (14/11/2026) iPad : Safari sur iPad se présente comme un Mac (« Macintosh ») ;
+  // il se reconnaît à son écran tactile (maxTouchPoints > 1), qu'aucun Mac n'a
+  const ipad = /iPad/.test(ua) || (/Macintosh/.test(ua) && navigator.maxTouchPoints > 1);
+  const mac = !ipad && /Macintosh|Mac OS X/.test(ua);
+  return { nom, mac, ipad };
 }
 
 // Fenêtre d'information après un enregistrement : nom du fichier, nombre de
 // lignes, et où le retrouver selon le navigateur (une page web ne peut pas
 // connaître le chemin complet du fichier : protection de l'ordinateur).
 function infoExport(nomFichier, nbLignes, parFenetre, erreur) {
-  const { nom, mac } = navigateur();
+  const { nom, mac, ipad } = navigateur();
   const nav = nom || "votre navigateur";
   const b = x => "<b>" + echap(x) + "</b>";
   let html;
@@ -3556,7 +3560,13 @@ function infoExport(nomFichier, nbLignes, parFenetre, erreur) {
   } else {
     $("titre-export").textContent = "Fichier enregistré";
     html = `<p>${b(nomFichier)} — ${nf(nbLignes)} ligne(s), à ouvrir dans LibreOffice ou Excel.</p>`;
-    if (parFenetre) {
+    if (ipad && !parFenetre) {
+      // iPad : pas de dossier de téléchargement à montrer ; l'iPad remet le
+      // fichier à une app capable de l'ouvrir (constaté : Numbers)
+      html = `<p>${b(nomFichier)} — ${nf(nbLignes)} ligne(s).</p>
+        <p>Sur iPad, le fichier est remis à une app capable de l'ouvrir, par exemple Numbers.</p>
+        <p>Pour le garder dans un dossier de votre choix : dans cette app, Partager > « Enregistrer dans Fichiers ».</p>`;
+    } else if (parFenetre) {
       html += `<p>Il se trouve dans le dossier que vous avez choisi dans la fenêtre « Enregistrer sous… ».
         Par sécurité, ${echap(nav)} ne communique pas à la page le chemin complet du fichier.</p>
         <p>Pour le retrouver : le prochain « Enregistrer sous… » s'ouvrira dans ce même dossier ; sinon,
