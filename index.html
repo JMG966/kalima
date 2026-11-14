@@ -3,7 +3,7 @@
 =============================================================================
 kalima.html  --  Kalima : recherche de texte dans un document, en français et/ou en arabe
 =============================================================================
-Version du 20261114_0537. Page AUTONOME : elle s'ouvre dans le navigateur
+Version du 20261114_1347. Page AUTONOME : elle s'ouvre dans le navigateur
 (Safari, Chrome, Firefox, Edge ; Mac ou Windows), sans Python, sans
 connexion internet, sans aucun autre fichier. Sur iPad (iPadOS 16.6 ou
 plus récent, écran de 12,9 ou 13 pouces) : publiée en ligne
@@ -12,6 +12,8 @@ Visionneuse (13/11/2026) : zoom par pincement limité à la zone des pages ;
 pages dessinées sous 16 millions de points (limite de Safari sur iPad).
 Infobulles (14/11/2026) : à la souris et à l'approche de l'Apple Pencil, jamais au doigt.
 Export Excel (14/11/2026) : fenêtre « Fichier enregistré » propre à l'iPad.
+Kazimirski, index v1.2.2 (14/11/2026) : un signet d'entrée qui porte déjà le mot
+entier est pris tel quel (sinon, mot = chemin des lettres, comme avant).
 
 Ce qu'elle fait, et SEULEMENT cela :
   1. Choix du fichier source .odt, .docx ou .pdf (bouton ou glisser-déposer).
@@ -664,7 +666,7 @@ header .logo { transition: opacity .25s ease; }
   <div class="modal" role="dialog" aria-modal="true" aria-labelledby="titre-apropos">
     <h2 id="titre-apropos">À propos</h2>
     <div class="aide">
-    <p>Version : 20261114_0537</p>
+    <p>Version : 20261114_1347</p>
     <p class="chapeau"><b>Kalima</b> (<span lang="ar" dir="rtl">كلمة</span>, « mot ») recherche et compte les mots, français
       ou arabes, d'un document, et montre chaque occurrence dans son contexte et à sa place dans la page.</p>
     <h3>Son histoire</h3>
@@ -1218,9 +1220,18 @@ async function lirePdf(buf, progres, f) {
         if (it.items && it.items.length) await parcourir(it.items, [], nom, noeud[4]);
         continue;
       }
-      const ch = chemin.concat(titre.replace(SIGNES, ""));
-      noeud[3] = ch.join("");
-      if (ETOILE.test(titre)) entrees.push({ page: pg, racine: ch.join(""), haut, lettre });
+      // Mot du signet. Ancien index (jusqu'à v1.2.0) : chaque signet est UNE
+      // lettre, le mot est le chemin des lettres (« ء » > « ب » > « ب* » = ءبب).
+      // (14/11/2026) Nouvel index (v1.2.2) : le signet d'entrée porte déjà le mot
+      // entier (« ءبب* ») ; il est pris tel quel. Règle : titre de plus d'une
+      // lettre qui commence par le mot du signet parent = mot entier (vérifié sur
+      // les 11 586 signets de v1.2.2 : 9 314 titres de plus d'une lettre, tous
+      // des entrées « * », tous prolongeant le mot du parent, aucune exception).
+      const t = titre.replace(SIGNES, ""), parent = chemin.join("");
+      const mot = [...t].length > 1 && t.startsWith(parent) ? t : parent + t;
+      const ch = [mot];
+      noeud[3] = mot;
+      if (ETOILE.test(titre)) entrees.push({ page: pg, racine: mot, haut, lettre });
       if (it.items && it.items.length) await parcourir(it.items, ch, lettre, noeud[4]);
     }
   }
@@ -1381,7 +1392,7 @@ let PDF_SIGNETS_ETOILE = [];
 // Version du contenu gardé en mémoire : à augmenter chaque fois que la page
 // garde des données nouvelles (2 = arbre des signets pour la visionneuse).
 // Une mémoire d'une version antérieure est ignorée et le PDF est relu.
-const MEMOIRE_VERSION = 10;           // 3 : arabe réparé, structure Fascicule/Séquence, notes ; 5 : arabe lu dans les ActualText ; 6 : position de chaque lettre ; 7 : filet des notes ; 8 : espaces arabes, sections comme l'ODT ; 9 : traits d'union du DiSBIAC ; 10 : numéros de page retirés
+const MEMOIRE_VERSION = 11;           // 11 : mot entier des signets du nouvel index Kazimirski (14/11/2026) ; 3 : arabe réparé, structure Fascicule/Séquence, notes ; 5 : arabe lu dans les ActualText ; 6 : position de chaque lettre ; 7 : filet des notes ; 8 : espaces arabes, sections comme l'ODT ; 9 : traits d'union du DiSBIAC ; 10 : numéros de page retirés
 function baseMemoire() {
   return new Promise((ok, ko) => {
     const r = indexedDB.open("recherche-texte", 1);
@@ -3032,6 +3043,7 @@ function titreArbre(t) {
   if (m && [...m[2]].length > 25) t = m[1] + [...m[2]].slice(0, 25).join("").trimEnd() + "…";
   return t;
 }
+const SIGNES_ARBRE = /[*\u066d\u200f\u0650\u064b-\u0652\s]/g;   // mêmes signes retirés que pour le mot du signet
 function remplirArbre(ul, noeuds) {
   for (const nd of noeuds) {
     const li = document.createElement("li");
@@ -3044,7 +3056,9 @@ function remplirArbre(ul, noeuds) {
     const kaz = !!(INDEX && INDEX.entrees);          // signets à « * » (Kazimirski) seulement
     if (kaz && nd[3] && !entree) d.classList.add("etape");
     d.innerHTML = `<span class="bascule">${enfants ? "▸" : ""}</span><span class="t">${echap(kaz ? nd[0].replace(/[*\u066d]/g, "").trim() : titreArbre(nd[0].trim()))}</span>` +
-      (kaz && nd[3] && nd[3].length > 1 ? `<bdi class="mot">${echap(nd[3])}</bdi>` : "") + `<span class="pg">${nd[1] || ""}</span>`;
+      // étiquette du mot reconstitué : seulement si elle diffère du titre (avec
+      // le nouvel index, le titre d'une entrée EST déjà le mot : pas de doublon)
+      (kaz && nd[3] && nd[3].length > 1 && nd[3] !== nd[0].replace(SIGNES_ARBRE, "") ? `<bdi class="mot">${echap(nd[3])}</bdi>` : "") + `<span class="pg">${nd[1] || ""}</span>`;
     li.appendChild(d);
     ul.appendChild(li);
   }
@@ -3561,11 +3575,15 @@ function infoExport(nomFichier, nbLignes, parFenetre, erreur) {
     $("titre-export").textContent = "Fichier enregistré";
     html = `<p>${b(nomFichier)} — ${nf(nbLignes)} ligne(s), à ouvrir dans LibreOffice ou Excel.</p>`;
     if (ipad && !parFenetre) {
-      // iPad : pas de dossier de téléchargement à montrer ; l'iPad remet le
-      // fichier à une app capable de l'ouvrir (constaté : Numbers)
+      // iPad : pas de dossier de téléchargement ; l'iPad affiche sa propre
+      // fenêtre (constaté le 14/11/2026 sur un iPad réglé en anglais :
+      // « Open in Numbers » et « More… », puis dans « More… » : AirDrop,
+      // Numbers, Messages, Mail…, « Copy », « Save to Files »)
       html = `<p>${b(nomFichier)} — ${nf(nbLignes)} ligne(s).</p>
-        <p>Sur iPad, le fichier est remis à une app capable de l'ouvrir, par exemple Numbers.</p>
-        <p>Pour le garder dans un dossier de votre choix : dans cette app, Partager > « Enregistrer dans Fichiers ».</p>`;
+        <p>L'iPad affiche sa propre fenêtre pour ce fichier :</p>
+        <ul><li>« Ouvrir dans Numbers » (Open in Numbers) : le fichier s'ouvre dans Numbers ;</li>
+          <li>« Plus… » (More…), puis « Enregistrer dans Fichiers » (Save to Files) : le fichier est rangé dans le
+            dossier de votre choix ; « Plus… » propose aussi AirDrop, Mail, Messages…</li></ul>`;
     } else if (parFenetre) {
       html += `<p>Il se trouve dans le dossier que vous avez choisi dans la fenêtre « Enregistrer sous… ».
         Par sécurité, ${echap(nav)} ne communique pas à la page le chemin complet du fichier.</p>
