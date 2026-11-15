@@ -3,7 +3,7 @@
 =============================================================================
 kalima.html  --  Kalima : recherche de texte dans un document, en français et/ou en arabe
 =============================================================================
-Version du 20261115_1549. Page AUTONOME : elle s'ouvre dans le navigateur
+Version du 20261115_1609. Page AUTONOME : elle s'ouvre dans le navigateur
 (Safari, Chrome, Firefox, Edge ; Mac ou Windows), sans Python, sans
 connexion internet, sans aucun autre fichier. Sur iPad (iPadOS 16.6 ou
 plus récent, écran de 12,9 ou 13 pouces) : publiée en ligne
@@ -20,6 +20,8 @@ Aide (15/11/2026) : lien et marche à suivre pour télécharger le Kazimirski in
 Carte 1 (15/11/2026) : bouton « Télécharger le Kazimirski » (ouvre le même dossier Google Drive).
 PDF sans signets (15/11/2026) : pages plus étiquetées « Introduction » (la recherche donnait 0) ;
 case « Prendre en compte l'introduction » masquée quand le document n'a pas d'introduction reconnue.
+Petits écrans (15/11/2026) : sous 1100 px de haut, la page défile et le tableau des occurrences
+garde 60 % de la hauteur de la fenêtre ; après une recherche, la page descend sur les résultats.
 
 Ce qu'elle fait, et SEULEMENT cela :
   1. Choix du fichier source .odt, .docx ou .pdf (bouton ou glisser-déposer).
@@ -248,11 +250,19 @@ main {
 #resultats .deux > div { min-height: 0; overflow: auto; }
 #resultats .defile { flex: 1; min-height: 0; max-height: none; }
 footer { flex: none; }
-@media (max-width: 1000px), (max-height: 600px) {
+/* (15/11/2026) Fenêtre basse : la page défile au lieu d'être bloquée à la hauteur
+   de l'écran. Le seuil passe de 600 à 1100 px de haut : sur un portable
+   (1366 x 768, environ 650 px utiles), la mise en page fixe ne laissait AUCUNE
+   place au tableau « Occurrences » (0 ligne visible, pas de défilement) ;
+   il en fallait 1024 px pour voir 3 lignes. Signalé par J.-C. Rolland. */
+@media (max-width: 1000px), (max-height: 1100px) {
   html, body { height: auto; } body { display: block; overflow: auto; }
   main { display: block; } #resultats { display: block; } #resultats > .carte { margin-bottom: 14px; }
   #resultats .defile, #resultats .deux > div { max-height: 60vh; }
 }
+/* fenêtre basse : les deux tableaux de statistiques limités à un quart de la hauteur,
+   pour que les premières lignes des occurrences soient visibles sans défiler */
+@media (max-height: 1100px) { #resultats .deux > div { max-height: max(120px, 26vh); } }
 .carte {
   background: var(--carte); border: 1px solid var(--bord); border-radius: 10px;
   box-shadow: var(--ombre); padding: 14px 18px; margin-bottom: 14px;
@@ -683,7 +693,7 @@ header .logo { transition: opacity .25s ease; }
   <div class="modal" role="dialog" aria-modal="true" aria-labelledby="titre-apropos">
     <h2 id="titre-apropos">À propos</h2>
     <div class="aide">
-    <p>Version : 20261115_1549</p>
+    <p>Version : 20261115_1609</p>
     <p class="chapeau"><b>Kalima</b> (<span lang="ar" dir="rtl">كلمة</span>, « mot ») recherche et compte les mots, français
       ou arabes, d'un document, et montre chaque occurrence dans son contexte et à sa place dans la page.</p>
     <h3>Son histoire</h3>
@@ -2566,6 +2576,9 @@ function lancer() {
   tri = { col: "n", sens: 1 };
   appliquer();
   $("resultats").classList.remove("cache");
+  // (15/11/2026) fenêtre basse (la page défile) : amener les résultats sous les yeux
+  if (matchMedia("(max-width: 1000px), (max-height: 1100px)").matches)
+    requestAnimationFrame(() => $("resultats").scrollIntoView({ behavior: "smooth", block: "start" }));
 }
 
 function afficherStats(mot, formes) {
