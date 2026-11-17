@@ -3,7 +3,7 @@
 =============================================================================
 kalima.html  --  Kalima : recherche de texte dans un document, en français et/ou en arabe
 =============================================================================
-Version du 20261115_1609. Page AUTONOME : elle s'ouvre dans le navigateur
+Version du 20261117_1608. Page AUTONOME : elle s'ouvre dans le navigateur
 (Safari, Chrome, Firefox, Edge ; Mac ou Windows), sans Python, sans
 connexion internet, sans aucun autre fichier. Sur iPad (iPadOS 16.6 ou
 plus récent, écran de 12,9 ou 13 pouces) : publiée en ligne
@@ -22,6 +22,13 @@ PDF sans signets (15/11/2026) : pages plus étiquetées « Introduction » (la r
 case « Prendre en compte l'introduction » masquée quand le document n'a pas d'introduction reconnue.
 Petits écrans (15/11/2026) : sous 1100 px de haut, la page défile et le tableau des occurrences
 garde 60 % de la hauteur de la fenêtre ; après une recherche, la page descend sur les résultats.
+Carte 1 (17/11/2026) : « Fichier source (PDF) » et « Choisir un fichier PDF » ; .odt et .docx
+toujours acceptés, sans être annoncés.
+Mot arabe (17/11/2026) : voyelles longues ا و ي ى facultatives avant, entre et après
+les lettres tapées ; une pastille par forme trouvée (Kazimirski : recherche par racine inchangée).
+Mot arabe, règles du 17/11/2026 : en tête ا ي أ إ آ, au milieu ا و ي أ ؤ ئ ء آ, à la fin
+ا و ي ى ء أ ؤ ئ, jusqu'à deux par place ; tanwin toléré sur les deux dernières lettres.
+Arabe agrandi de 20 % partout (17/11/2026) : police « Kalima arabe » (unicode-range + size-adjust).
 
 Ce qu'elle fait, et SEULEMENT cela :
   1. Choix du fichier source .odt, .docx ou .pdf (bouton ou glisser-déposer).
@@ -78,8 +85,11 @@ Ce qu'elle fait, et SEULEMENT cela :
      les statistiques mais citée à part, en gris. Exceptions : FEMININS_IRREGULIERS et
      PLURIELS_IRREGULIERS. Ligatures : « oe » et « œ » (de même « ae » et
      « æ ») sont confondus : « boeuf » trouve aussi « bœuf », et inversement.
-  4. Mot ARABE : seule sa forme exacte est comptée (pas de féminin ni de
-     pluriel). Mot entier : pas d'autre lettre arabe juste avant ni juste
+  4. Mot ARABE : la forme tapée, et aussi (17/11/2026) les mots qui ont en plus,
+     autour de ses lettres gardées dans l'ordre, jusqu'à deux lettres à chaque
+     place : en tête ا ي أ إ آ ; au milieu ا و ي أ ؤ ئ ء آ ; à la fin ا و ي ى ء
+     أ ؤ ئ. جمل trouve aussi جمال, جميل, أجمل, جملاء ; une pastille par forme
+     trouvée. Tanwin toléré sur les deux dernières lettres. Mot entier : pas d'autre lettre arabe juste avant ni juste
      après. Trois façons de traiter les diacritiques (voyelles, tanwin,
      shadda, soukoun, alif suscrit, tatwil) :
        . « au moins ces signes » (par défaut) : les diacritiques tapés
@@ -183,11 +193,23 @@ if (location.protocol === "https:" || location.hostname === "localhost") {
    en-tete et saisie en haut, puis les deux cartes de resultats se
    partagent la hauteur restante ; leurs tableaux defilent a l'interieur.
    Petite fenetre (largeur < 900 px ou hauteur < 640 px) : defilement normal. */
+/* (17/11/2026) Arabe agrandi de 20 % PARTOUT (champ, tableaux, pastilles, filtres,
+   infobulles, aide, arbre…), le latin gardant sa taille : une police « Kalima
+   arabe » qui ne couvre que les caractères arabes (unicode-range) et les grossit
+   (size-adjust). Elle reprend une police arabe déjà installée : SF Arabic ou
+   Geeza Pro (Mac, iPad), Segoe UI, Arial ou Tahoma (Windows). Sans effet là où
+   size-adjust n'existe pas (Safari avant la version 17) : l'arabe y garde sa
+   taille. La couche de texte de la visionneuse (police « serif ») n'est pas
+   touchée : sa sélection reste calée sur la page. */
+@font-face { font-family: "Kalima arabe"; font-weight: 100 600; unicode-range: U+0600-06FF, U+0750-077F, U+08A0-08FF, U+FB50-FDFF, U+FE70-FEFF; size-adjust: 120%;
+  src: local("SF Arabic"), local("SFArabic-Regular"), local("Geeza Pro"), local("GeezaPro"), local("Segoe UI"), local("SegoeUI"), local("Arial"), local("ArialMT"), local("Tahoma"), local("Noto Sans Arabic"), local("DejaVu Sans"); }
+@font-face { font-family: "Kalima arabe"; font-weight: 700 900; unicode-range: U+0600-06FF, U+0750-077F, U+08A0-08FF, U+FB50-FDFF, U+FE70-FEFF; size-adjust: 120%;
+  src: local("SF Arabic Bold"), local("SFArabic-Bold"), local("Geeza Pro Bold"), local("GeezaPro-Bold"), local("Segoe UI Bold"), local("SegoeUI-Bold"), local("Arial Bold"), local("Arial-BoldMT"), local("Tahoma Bold"), local("Tahoma-Bold"), local("Noto Sans Arabic Bold"), local("DejaVu Sans Bold"); }
 html, body { height: 100%; }
 body {
   display: flex; flex-direction: column; overflow: hidden;
   margin: 0; background: var(--fond); color: var(--texte);
-  font: 14px/1.45 -apple-system, BlinkMacSystemFont, "Segoe UI", "Helvetica Neue", Arial, sans-serif;
+  font: 14px/1.45 "Kalima arabe", -apple-system, BlinkMacSystemFont, "Segoe UI", "Helvetica Neue", Arial, sans-serif;
 }
 header {
   background: var(--carte); border-bottom: 1px solid var(--bord);
@@ -360,7 +382,7 @@ button.secondaire { background: var(--accent-doux); color: var(--accent); font-w
 #arbre .actif .bascule, #arbre .actif .pg { color: #fff; }
 #arbre .t { font-size: 19px; line-height: 1.5; }
 /* (14/11/2026) arabe des titres agrandi d'environ 20 % ; le latin garde 19 px */
-#arbre .t .ar { font-size: 23px; }
+#arbre .t .ar { }   /* (17/11/2026) taille : règle générale « Kalima arabe » (+20 %) */
 /* (15/11/2026) Aide : détail d'une rubrique, déplié par « Plus d'informations… » */
 .aide .detail { margin: 2px 0 10px; padding-left: 12px; border-left: 3px solid var(--bord); }
 .aide a.plus { white-space: nowrap; }
@@ -368,7 +390,7 @@ button.secondaire { background: var(--accent-doux); color: var(--accent); font-w
 #arbre .etape .t, #arbre .etape .mot { color: var(--doux); opacity: .7; }
 /* mot reconstitué : même taille que la lettre, dans une étiquette discrète
    qui le sépare nettement de la lettre */
-#arbre .mot { font-size: 23px; line-height: 1.3; color: var(--texte); background: var(--fond);
+#arbre .mot { font-size: 19px; line-height: 1.3; color: var(--texte); background: var(--fond);
   border: 1px solid var(--bord); border-radius: 5px; padding: 0 7px; margin-left: 8px; }
 #arbre .actif .mot { color: #fff; background: rgba(255,255,255,.15); border-color: rgba(255,255,255,.4); }
 #arbre .pg { color: var(--doux); font-size: 13px; margin-left: auto; padding-left: 8px; }
@@ -693,7 +715,7 @@ header .logo { transition: opacity .25s ease; }
   <div class="modal" role="dialog" aria-modal="true" aria-labelledby="titre-apropos">
     <h2 id="titre-apropos">À propos</h2>
     <div class="aide">
-    <p>Version : 20261115_1609</p>
+    <p>Version : 20261117_1608</p>
     <p class="chapeau"><b>Kalima</b> (<span lang="ar" dir="rtl">كلمة</span>, « mot ») recherche et compte les mots, français
       ou arabes, d'un document, et montre chaque occurrence dans son contexte et à sa place dans la page.</p>
     <h3>Son histoire</h3>
@@ -816,7 +838,7 @@ header .logo { transition: opacity .25s ease; }
 
     <h3>2. Chercher un mot</h3>
     <p>Tapez un seul mot, puis « Rechercher » ou Entrée. Pour un mot français, Kalima compte aussi le féminin et le
-      pluriel. Pour un mot arabe, seule la forme tapée est cherchée. Par défaut, la recherche se limite aux entrées du
+      pluriel. Pour un mot arabe, Kalima compte aussi les mots qui ont en plus une voyelle longue ou une hamza. Par défaut, la recherche se limite aux entrées du
       dictionnaire : trois cases à cocher l'étendent aux titres, aux notes et à l'introduction. <a href="#" class="plus" data-plus="aide-d2">Plus d'informations…</a></p>
     <div class="detail" id="aide-d2" hidden>
     <p>Tapez le mot, puis « Rechercher » ou la touche Entrée. La recherche porte sur des <b>mots entiers</b>, sans
@@ -826,7 +848,11 @@ header .logo { transition: opacity .25s ease; }
       par des règles et peuvent ne pas exister (« pénis » donne « pénise ») : celles qui sont absentes du document sont
       seulement citées, en gris. « oe » et « œ » (de même « ae » et « æ ») sont confondus : « boeuf » trouve aussi
       « bœuf ».</p>
-    <p><b>Mot arabe</b> : seule la forme tapée est cherchée (ni féminin ni pluriel). Trois façons de traiter les
+    <p><b>Mot arabe</b> : Kalima compte la forme tapée, et aussi les mots qui ont en plus, autour de ses lettres qui
+      restent dans l'ordre, jusqu'à deux lettres à chaque place : en tête ا, ي, أ, إ, آ ; au milieu ا, و, ي, أ, ؤ, ئ,
+      ء, آ ; à la fin ا, و, ي, ى, ء, أ, ؤ, ئ. Ainsi جمل trouve aussi جمال, جميل, أجمل, إجمال, جملاء ; سل trouve
+      سائل, سؤال. Chaque forme trouvée a sa pastille. Le tanwin est accepté sur les deux dernières lettres, même
+      s'il n'est pas tapé. Ni féminin ni pluriel. Trois façons de traiter les
       signes (voyelles, tanwin, shadda, soukoun, alif suscrit, tatwil) :</p>
     <ul>
       <li><b>au moins ces signes</b> (par défaut) : les signes tapés doivent être là, d'autres en plus sont acceptés ;
@@ -961,9 +987,12 @@ header .logo { transition: opacity .25s ease; }
   <!-- 1 et 2 : fichier source et mot -->
   <div class="etapes">
     <section class="carte">
-      <h2><span class="num">1</span>Fichier source (.odt, .docx ou .pdf)</h2>
+      <h2><span class="num">1</span>Fichier source (PDF)</h2>
       <label id="depot" for="fichier">
-        <div class="grand">Choisir un fichier .odt, .docx ou .pdf</div>
+        <!-- (17/11/2026) seul le PDF est annoncé : c'est le seul format qui a la visionneuse, et le seul
+             que reçoivent les correspondants. Les .odt et .docx restent acceptés (input « accept »
+             et contrôle du nom inchangés), pour les vérifications de l'auteur. -->
+        <div class="grand">Choisir un fichier PDF</div>
         <div class="aide">ou le glisser ici — il est lu sur cet appareil, rien n'est envoyé ni modifié</div>
       </label>
       <input id="fichier" type="file" accept=".odt,.docx,.pdf,application/pdf,application/vnd.oasis.opendocument.text,application/vnd.openxmlformats-officedocument.wordprocessingml.document">
@@ -986,7 +1015,7 @@ header .logo { transition: opacity .25s ease; }
         <button id="chercher" disabled>Rechercher</button>
       </div>
       <div class="aide"><b>Mot français</b> (masculin singulier) : forme exacte, féminin, pluriels — fabriqués par
-        règles, les formes absentes sont citées à part · <b>Mot arabe</b> : forme exacte · Mot entier, sans distinction de majuscules ·
+        règles, les formes absentes sont citées à part · <b>Mot arabe</b> : forme exacte, et formes avec voyelle longue ou hamza en plus · Mot entier, sans distinction de majuscules ·
         Cases ci-dessous : entrées lexicales seulement (DiSBIAC, cochée par défaut), notes de bas de page et introduction (non comprises par défaut).</div>
       <div class="cases">   <!-- portee de la recherche ; changer une case relance la recherche -->
         <label id="caseEntrees" class="cache" data-bulle="Ne chercher que dans les entrées lexicales : sans les titres de séquences, de sens et de rubriques (ni les lignes de sous-sens qui les suivent)"><input id="entreesSeules" type="checkbox" checked disabled> Entrées lexicales seulement</label>
@@ -2422,17 +2451,41 @@ function chercherArabe(blocs, mot, mode) {
   //   exact   : exactement les diacritiques tapes, ni plus ni moins.
   // Le tatwil (U+0640) ne compte jamais. Mot entier : pas d'autre lettre
   // arabe juste avant ni juste apres.
+  // (17/11/2026, règles de Jean-Marc) Lettres ajoutées autour des lettres tapées,
+  // qui restent dans l'ordre donné ; chacune avec ses propres signes :
+  //   en tête    : ا ي, et la hamza initiale أ إ آ ;
+  //   au milieu  : ا و ي, et la hamza médiane أ ؤ ئ ء آ ;
+  //   à la fin   : ا و ي ى, et la hamza finale ء أ ؤ ئ.
+  // Jusqu'à DEUX lettres ajoutées à chaque place (sinon سل ne trouverait ni
+  // سائل ni سؤال, سم ne trouverait pas سماء, هد pas هدوء).
+  // Ex. : جمل trouve aussi جمال, جميل, جامل, أجمل, إجمال, جملاء. Les signes des
+  // lettres ajoutées ne sont jamais contrôlés ; le mode des diacritiques ne
+  // porte que sur les lettres tapées (seules elles sont capturées : m[1] … m[n]).
   const lettres = decouperArabe(mot);
-  const motif = lettres.map(l => echapperRegex(l.lettre) + "(" + CLASSE_DIA + "*)").join("");
-  const re = new RegExp("(?<!\\p{Script=Arabic})" + motif + "(?![\\p{L}\\p{N}])", "gu");
+  const ajout = codes => "(?:[" + codes.map(x => cc(x)).join("") + "]" + CLASSE_DIA + "*){0,2}";
+  const TETE = ajout([0x627, 0x64A, 0x623, 0x625, 0x622]);
+  const MILIEU = ajout([0x627, 0x648, 0x64A, 0x623, 0x624, 0x626, 0x621, 0x622]);
+  const FIN = ajout([0x627, 0x648, 0x64A, 0x649, 0x621, 0x623, 0x624, 0x626]);
+  const motif = TETE + lettres.map((l, i) => echapperRegex(l.lettre) + "(" + CLASSE_DIA + "*)" +
+                                            (i < lettres.length - 1 ? MILIEU : FIN)).join("");
+  // (17/11/2026) mot entier : ni lettre ni SIGNE (\\p{M}) juste avant ou juste
+  // après. Sans \\p{M}, la recherche pouvait s'arrêter devant une šadda ou une
+  // voyelle à l'intérieur d'un mot (سل trouvé dans سلّة, سلّم…) ou commencer
+  // juste après une voyelle : les harakat ne sont pas du « Script=Arabic ».
+  const re = new RegExp("(?<![\\p{Script=Arabic}\\p{M}])" + motif + "(?![\\p{L}\\p{N}\\p{M}])", "gu");
   const garder = a => [...a].filter(ch => ch !== cc(0x640)).sort();
+  // (17/11/2026) tanwin (U+064B-U+064D) toléré sur les deux dernières lettres
+  // tapées, même en mode « exactement ces signes », s'il n'a pas été tapé :
+  // كتاب trouve كتابٌ et كتابًا (tanwin sur la lettre d'avant le alif ajouté)
+  const TANWIN = [cc(0x64B), cc(0x64C), cc(0x64D)];
+  const sansTanwin = (a, i, voulus) => i < lettres.length - 2 || voulus.some(d => TANWIN.includes(d)) ? a : a.filter(d => !TANWIN.includes(d));
   const occ = [];
   for (const b of blocs) {
     re.lastIndex = 0;
     let m;
     while ((m = re.exec(b.t)) !== null) {
       const ok = mode === "ignorer" || lettres.every((l, i) => {
-        const trouves = garder(m[i + 1]), voulus = garder(l.dia);
+        const voulus = garder(l.dia), trouves = sansTanwin(garder(m[i + 1]), i, voulus);
         if (mode === "exact") return trouves.join("") === voulus.join("");
         const reste = [...trouves];
         return voulus.every(d => { const k = reste.indexOf(d); if (k < 0) return false; reste.splice(k, 1); return true; });
@@ -2445,6 +2498,20 @@ function chercherArabe(blocs, mot, mode) {
     }
   }
   return occ;
+}
+
+// (17/11/2026) Occurrences d'un mot arabe regroupées par forme trouvée, ses
+// lettres sans signes : d'abord la forme exacte (mêmes lettres que le mot tapé,
+// toujours présente, même à 0), puis les formes avec voyelle longue, de la plus
+// fréquente à la plus rare. Même structure que formesACompter (nom, forme, occ).
+function formesArabes(occ, mot) {
+  const nu = s => [...s].filter(ch => !estDiacritique(ch)).join("");
+  const exacte = nu(mot), groupes = new Map();
+  for (const o of occ) { const k = nu(o.trouve); if (!groupes.has(k)) groupes.set(k, []); groupes.get(k).push(o); }
+  const formes = [{ nom: "forme exacte", forme: mot, doublon: false, occ: groupes.get(exacte) || [] }];
+  [...groupes].filter(([k]) => k !== exacte).sort((a, b) => b[1].length - a[1].length)
+    .forEach(([k, l]) => formes.push({ nom: "avec voyelle longue ou hamza", forme: k, doublon: false, occ: l }));
+  return formes;
 }
 
 function numFasc(f) { const m = /\d+/.exec(f); return m ? parseInt(m[0], 10) : 0; }
@@ -2524,9 +2591,10 @@ function lancer() {
   if (!saisie || /\s/.test(saisie)) { etat("etatMot", "Il faut un seul mot, sans espace.", "erreur"); return; }
   const mot = saisie.normalize("NFC").toLowerCase();
   const arabe = RE_ARABE.test(mot);
-  // mot arabe : forme exacte seulement
+  // mot arabe : forme exacte et formes avec voyelle longue (17/11/2026) ;
+  // Kazimirski (index) : mot arabe = racine, inchangé
   const parRacine = !!(BLOCS.pdf && BLOCS.pdf.index && INDEX && INDEX.entrees);   // Kazimirski : mot arabe = racine
-  const formes = arabe ? [{ nom: parRacine ? "racine" : "forme exacte", forme: parRacine ? normaliserRacine(mot) : mot, doublon: false }] : formesACompter(mot);
+  let formes = arabe ? (parRacine ? [{ nom: "racine", forme: normaliserRacine(mot), doublon: false }] : null) : formesACompter(mot);
   // notes de bas de page : cherchees seulement si la case est cochee
   const avecNotes = $("avecNotes").checked;
   // introduction (tout ce qui precede « Fascicule 1 ») : cherchee seulement si la case est cochee
@@ -2535,11 +2603,10 @@ function lancer() {
   const entreesSeules = $("entreesSeules").checked;
   const blocs = BLOCS.filter(b => (avecNotes || !b.note) && (avecIntro || b.fasc !== "Introduction") && !(entreesSeules && b.titre));
   LIGNES = []; let n = 0;
-  for (const fo of formes) {
-    fo.occ = fo.doublon ? [] : (arabe ? (parRacine ? chercherRacine(blocs, mot) : chercherArabe(blocs, mot, MODE()))
-                                      : chercher(blocs, fo.forme));
-    for (const o of fo.occ) LIGNES.push({ ...o, nom: fo.nom, forme: fo.forme });
-  }
+  if (!formes) formes = formesArabes(chercherArabe(blocs, mot, MODE()), mot);   // une seule recherche, puis regroupement
+  else for (const fo of formes)
+    fo.occ = fo.doublon ? [] : (arabe ? chercherRacine(blocs, mot) : chercher(blocs, fo.forme));
+  for (const fo of formes) for (const o of fo.occ) LIGNES.push({ ...o, nom: fo.nom, forme: fo.forme });
   // Numérotation dans l'ORDRE DU DOCUMENT, toutes formes confondues (page,
   // colonne, position dans le texte) : « résultat suivant » suit l'ordre du
   // dictionnaire, et non plus forme après forme.
