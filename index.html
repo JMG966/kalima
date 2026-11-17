@@ -3,7 +3,7 @@
 =============================================================================
 kalima.html  --  Kalima : recherche de texte dans un document, en français et/ou en arabe
 =============================================================================
-Version du 20261117_1608. Page AUTONOME : elle s'ouvre dans le navigateur
+Version du 20261117_1641. Page AUTONOME : elle s'ouvre dans le navigateur
 (Safari, Chrome, Firefox, Edge ; Mac ou Windows), sans Python, sans
 connexion internet, sans aucun autre fichier. Sur iPad (iPadOS 16.6 ou
 plus récent, écran de 12,9 ou 13 pouces) : publiée en ligne
@@ -29,6 +29,7 @@ les lettres tapées ; une pastille par forme trouvée (Kazimirski : recherche pa
 Mot arabe, règles du 17/11/2026 : en tête ا ي أ إ آ, au milieu ا و ي أ ؤ ئ ء آ, à la fin
 ا و ي ى ء أ ؤ ئ, jusqu'à deux par place ; tanwin toléré sur les deux dernières lettres.
 Arabe agrandi de 20 % partout (17/11/2026) : police « Kalima arabe » (unicode-range + size-adjust).
+Clavier arabe à l'écran (17/11/2026) : bouton ع à droite du champ « Mot à chercher ».
 
 Ce qu'elle fait, et SEULEMENT cela :
   1. Choix du fichier source .odt, .docx ou .pdf (bouton ou glisser-déposer).
@@ -338,6 +339,21 @@ input[type=text], input[type=search], select {
 }
 input:focus, select:focus { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-doux); }
 #mot { flex: 1; font-size: 16px; }
+/* (17/11/2026) clavier arabe à l'écran */
+#btnClavier { padding: 6px 14px; font-size: 19px; line-height: 1; }
+#btnClavier.actif { background: var(--accent); color: #fff; }
+#clavierAr { margin-top: 10px; padding: 10px; border: 1px solid var(--bord); border-radius: 10px; background: var(--fond); }
+#clavierAr .rangee { display: flex; flex-wrap: wrap; gap: 5px; margin-bottom: 6px; }
+#clavierAr .rangee:last-child { margin-bottom: 0; }
+#clavierAr .rangee.ar { direction: rtl; }
+#clavierAr button { min-width: 38px; height: 38px; padding: 0 6px; font-size: 19px; font-weight: 400;
+  background: var(--carte); color: var(--texte); border: 1px solid var(--bord); border-radius: 7px;
+  touch-action: manipulation; }
+#clavierAr button:hover { border-color: var(--accent); }
+#clavierAr button:active { background: var(--accent-doux); }
+#clavierAr button.signe { min-width: 44px; }
+#clavierAr button.action { font-size: 14px; font-weight: 600; padding: 0 12px; }
+#clavierAr button.action.principal { background: var(--accent); color: #fff; border-color: var(--accent); }
 button {
   font: inherit; font-weight: 600; padding: 9px 18px; border-radius: 8px; border: 0;
   background: var(--accent); color: #fff; cursor: pointer;
@@ -715,7 +731,7 @@ header .logo { transition: opacity .25s ease; }
   <div class="modal" role="dialog" aria-modal="true" aria-labelledby="titre-apropos">
     <h2 id="titre-apropos">À propos</h2>
     <div class="aide">
-    <p>Version : 20261117_1608</p>
+    <p>Version : 20261117_1641</p>
     <p class="chapeau"><b>Kalima</b> (<span lang="ar" dir="rtl">كلمة</span>, « mot ») recherche et compte les mots, français
       ou arabes, d'un document, et montre chaque occurrence dans son contexte et à sa place dans la page.</p>
     <h3>Son histoire</h3>
@@ -848,6 +864,8 @@ header .logo { transition: opacity .25s ease; }
       par des règles et peuvent ne pas exister (« pénis » donne « pénise ») : celles qui sont absentes du document sont
       seulement citées, en gris. « oe » et « œ » (de même « ae » et « æ ») sont confondus : « boeuf » trouve aussi
       « bœuf ».</p>
+    <p class="astuce">Pas de clavier arabe sur votre appareil ? Le bouton <b>ع</b>, à droite du champ, ouvre un
+      clavier arabe à l'écran : lettres dans l'ordre de l'alphabet, hamza, signes ; un clic écrit le caractère.</p>
     <p><b>Mot arabe</b> : Kalima compte la forme tapée, et aussi les mots qui ont en plus, autour de ses lettres qui
       restent dans l'ordre, jusqu'à deux lettres à chaque place : en tête ا, ي, أ, إ, آ ; au milieu ا, و, ي, أ, ؤ, ئ,
       ء, آ ; à la fin ا, و, ي, ى, ء, أ, ؤ, ئ. Ainsi جمل trouve aussi جمال, جميل, أجمل, إجمال, جملاء ; سل trouve
@@ -1012,8 +1030,14 @@ header .logo { transition: opacity .25s ease; }
       <h2><span class="num">2</span>Mot à chercher</h2>
       <div class="ligne">
         <input id="mot" type="text" placeholder="ex. chameau  ou  جمل" autocomplete="off" spellcheck="false" disabled dir="auto">
+        <!-- (17/11/2026) bouton du clavier arabe à l'écran (ouvre / ferme #clavierAr) -->
+        <button id="btnClavier" class="secondaire" type="button" disabled
+          data-bulle="Clavier arabe à l'écran (cliquer à nouveau : le fermer)">ع</button>
         <button id="chercher" disabled>Rechercher</button>
       </div>
+      <!-- (17/11/2026) clavier arabe à l'écran : lettres dans l'ordre de l'alphabet,
+           de droite à gauche ; puis hamza et finales ; puis signes. Rempli par script. -->
+      <div id="clavierAr" class="cache"></div>
       <div class="aide"><b>Mot français</b> (masculin singulier) : forme exacte, féminin, pluriels — fabriqués par
         règles, les formes absentes sont citées à part · <b>Mot arabe</b> : forme exacte, et formes avec voyelle longue ou hamza en plus · Mot entier, sans distinction de majuscules ·
         Cases ci-dessous : entrées lexicales seulement (DiSBIAC, cochée par défaut), notes de bas de page et introduction (non comprises par défaut).</div>
@@ -3493,9 +3517,75 @@ const MODE = () => document.querySelector("input[name=dia]:checked").value;
 // ou qu'aucun mot n'est saisi.
 function majCommandes() {
   const inactif = !BLOCS || !$("mot").value.trim();
+  $("btnClavier").disabled = !BLOCS;                 // (17/11/2026) clavier arabe : utilisable dès qu'un fichier est lu
   for (const id of ["chercher", "entreesSeules", "avecNotes", "avecIntro"]) $(id).disabled = inactif;
 }
 $("mot").addEventListener("input", majCommandes);
+
+// ---------------------------------------------------------------------
+// Clavier arabe à l'écran (17/11/2026)
+// ---------------------------------------------------------------------
+// Pour qui n'a pas de clavier arabe sur son appareil. Un clic (ou un toucher)
+// écrit le caractère à l'endroit du curseur dans le champ « Mot à chercher »,
+// comme une frappe : l'événement « input » est envoyé, donc les réglages des
+// diacritiques apparaissent et « Rechercher » s'active comme d'habitude.
+// Sur un écran tactile, le champ ne reçoit pas le focus : le clavier de
+// l'iPad ne s'ouvre donc pas par-dessus.
+(() => {
+  const C = x => String.fromCharCode(x);
+  const LETTRES = [0x627, 0x628, 0x62A, 0x62B, 0x62C, 0x62D, 0x62E, 0x62F, 0x630, 0x631, 0x632, 0x633, 0x634,
+                   0x635, 0x636, 0x637, 0x638, 0x639, 0x63A, 0x641, 0x642, 0x643, 0x644, 0x645, 0x646, 0x647,
+                   0x648, 0x64A];                                        // ا … ي, ordre de l'alphabet
+  const HAMZA = [0x621, 0x623, 0x625, 0x622, 0x624, 0x626, 0x629, 0x649];   // ء أ إ آ ؤ ئ ة ى
+  const SIGNES = [[0x64E, "fatḥa"], [0x64F, "ḍamma"], [0x650, "kasra"], [0x652, "sukūn"], [0x651, "šadda"],
+                  [0x64B, "tanwīn fatḥ"], [0x64C, "tanwīn ḍamm"], [0x64D, "tanwīn kasr"]];
+  const touche = (c, cls, bulle) => `<button type="button" class="${cls || ""}" data-c="${c}"` +
+    (bulle ? ` data-bulle="${bulle}"` : "") + `>${cls === "signe" ? C(0x25CC) + c : c}</button>`;   // ◌ porte le signe
+  $("clavierAr").innerHTML =
+    // lettres en rangées de 10 (10, 10, 8), pour éviter une rangée orpheline
+    [0, 10, 20].map(k => `<div class="rangee ar">${LETTRES.slice(k, k + 10).map(x => touche(C(x))).join("")}</div>`).join("") +
+    `<div class="rangee ar">${HAMZA.map(x => touche(C(x))).join("")}</div>` +
+    `<div class="rangee ar">${SIGNES.map(([x, n]) => touche(C(x), "signe", n)).join("")}</div>` +
+    `<div class="rangee"><button type="button" class="action" data-act="effacer">⌫ Effacer</button>` +
+    `<button type="button" class="action" data-act="vider">Tout effacer</button>` +
+    `<button type="button" class="action principal" data-act="chercher">Rechercher</button></div>`;
+  const champ = $("mot");
+  const tactile = matchMedia("(pointer: coarse)").matches;
+  let pos = null;                                  // dernière position du curseur dans le champ
+  let interne = false;                             // « input » envoyé par le clavier lui-même : position déjà connue
+  const noter = () => { if (!interne) pos = [champ.selectionStart, champ.selectionEnd]; };
+  // sans focus (écran tactile), changer la valeur met le curseur du champ à la fin :
+  // la position est donc tenue ici, et l'événement « input » du clavier ne l'écrase pas
+  const signaler = () => { interne = true; champ.dispatchEvent(new Event("input", { bubbles: true })); interne = false; };
+  ["keyup", "click", "select", "input"].forEach(ev => champ.addEventListener(ev, noter));
+  const ecrire = texte => {
+    const v = champ.value, [d, f] = pos && pos[1] <= v.length ? pos : [v.length, v.length];
+    champ.value = v.slice(0, d) + texte + v.slice(f);
+    pos = [d + texte.length, d + texte.length];
+    if (!tactile) { champ.focus(); champ.setSelectionRange(pos[0], pos[1]); }
+    signaler();
+  };
+  const effacer = () => {
+    const v = champ.value, [d, f] = pos && pos[1] <= v.length ? pos : [v.length, v.length];
+    if (d !== f) { champ.value = v.slice(0, d) + v.slice(f); pos = [d, d]; }
+    else if (d > 0) { const a = [...v.slice(0, d)]; a.pop(); const g = a.join(""); champ.value = g + v.slice(d); pos = [g.length, g.length]; }
+    if (!tactile) { champ.focus(); champ.setSelectionRange(pos ? pos[0] : 0, pos ? pos[1] : 0); }
+    signaler();
+  };
+  // pointerdown empêché : le champ garde son focus et son curseur pendant le clic
+  $("clavierAr").addEventListener("pointerdown", e => { if (e.target.closest("button")) e.preventDefault(); });
+  $("clavierAr").addEventListener("click", e => {
+    const b = e.target.closest("button"); if (!b) return;
+    if (b.dataset.c) ecrire(b.dataset.c);
+    else if (b.dataset.act === "effacer") effacer();
+    else if (b.dataset.act === "vider") { champ.value = ""; pos = [0, 0]; signaler(); }
+    else if (b.dataset.act === "chercher" && champ.value.trim()) lancer();
+  });
+  $("btnClavier").addEventListener("click", () => {
+    const ouvert = $("clavierAr").classList.toggle("cache") === false;
+    $("btnClavier").classList.toggle("actif", ouvert);
+  });
+})();
 function majDiacritiques() { $("diacritiques").classList.toggle("cache", !RE_ARABE.test($("mot").value)); }
 $("mot").addEventListener("input", majDiacritiques); majDiacritiques();
 document.querySelectorAll("input[name=dia]").forEach(r => r.addEventListener("change", () => {
