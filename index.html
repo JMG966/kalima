@@ -3,7 +3,7 @@
 =============================================================================
 kalima.html  --  Kalima : recherche de texte dans un document, en français et/ou en arabe
 =============================================================================
-Version du 20261117_1815. Page AUTONOME : elle s'ouvre dans le navigateur
+Version du 20261118_0402. Page AUTONOME : elle s'ouvre dans le navigateur
 (Safari, Chrome, Firefox, Edge ; Mac ou Windows), sans Python, sans
 connexion internet, sans aucun autre fichier. Sur iPad (iPadOS 16.6 ou
 plus récent, écran de 12,9 ou 13 pouces) : publiée en ligne
@@ -32,6 +32,9 @@ Arabe agrandi de 20 % partout (17/11/2026) : police « Kalima arabe » (unicode-
 Clavier arabe à l'écran (17/11/2026) : bouton ع à droite du champ « Mot à chercher ».
 Diacritiques (17/11/2026) : « sans tenir compte des signes » par défaut.
 Pied de page (17/11/2026) : adresse du site au lieu de « Page autonome ».
+Copie depuis la visionneuse (18/11/2026) : texte brut seul, mots espacés, lignes et pages
+séparées (plus de morceaux épars ni de couleur du thème au collage) ; morceaux d'un même
+mot arabe recollés sans espace (18/11/2026, erreur de la version 0348).
 
 Ce qu'elle fait, et SEULEMENT cela :
   1. Choix du fichier source .odt, .docx ou .pdf (bouton ou glisser-déposer).
@@ -735,7 +738,7 @@ header .logo { transition: opacity .25s ease; }
   <div class="modal" role="dialog" aria-modal="true" aria-labelledby="titre-apropos">
     <h2 id="titre-apropos">À propos</h2>
     <div class="aide">
-    <p>Version : 20261117_1815</p>
+    <p>Version : 20261118_0402</p>
     <p class="chapeau"><b>Kalima</b> (<span lang="ar" dir="rtl">كلمة</span>, « mot ») recherche et compte les mots, français
       ou arabes, d'un document, et montre chaque occurrence dans son contexte et à sa place dans la page.</p>
     <h3>Son histoire</h3>
@@ -2868,6 +2871,48 @@ document.addEventListener("mousedown", e => {
   const c = e.target.closest && e.target.closest(".textLayer"); if (c) c.classList.add("selecting");
 });
 document.addEventListener("mouseup", () => document.querySelectorAll(".textLayer.selecting").forEach(c => c.classList.remove("selecting")));
+
+// (18/11/2026) Copie depuis la visionneuse : TEXTE SEUL, propre.
+// Sans cela, le navigateur copiait aussi la mise en forme de la couche de texte
+// (un bloc positionné par mot, couleur du thème) : collé dans un traitement de
+// texte ou un courriel, le texte sortait en morceaux épars, et en mode sombre
+// en noir sur noir. Ici, le texte est reconstitué morceau par morceau dans
+// l'ordre de lecture, comme le texte cherché (segment) : les morceaux sont mis
+// bout à bout, les espaces sont celles du document (un mot arabe fait de
+// plusieurs morceaux, comme موسّخ, reste donc d'un seul tenant ; erreur de la
+// version 0348, qui mettait une espace entre chaque morceau), un retour à la ligne en fin de ligne,
+// une ligne vide entre deux pages ; seul le format « texte brut » est copié,
+// donc le texte collé prend la mise en forme du document d'arrivée.
+document.addEventListener("copy", e => {
+  const sel = getSelection();
+  if (!sel.rangeCount || sel.isCollapsed) return;
+  const rg = sel.getRangeAt(0);
+  const couches = [...document.querySelectorAll(".textLayer")].filter(c => rg.intersectsNode(c));
+  if (!couches.length) return;                         // copie ailleurs dans Kalima : comportement habituel
+  const pages = [];
+  for (const c of couches) {
+    let lignes = [], ligne = "";
+    for (const el of c.children) {
+      if (!rg.intersectsNode(el)) continue;
+      if (el.tagName === "BR") { lignes.push(ligne); ligne = ""; continue; }
+      if (el.tagName !== "SPAN" || !el.firstChild) continue;
+      // mot coupé par le début ou la fin de la sélection : seule la partie sélectionnée
+      const n = el.firstChild, t0 = el.textContent;
+      const d = rg.startContainer === n ? rg.startOffset : 0, f = rg.endContainer === n ? rg.endOffset : t0.length;
+      const t = t0.slice(d, f);
+      // entre une lettre latine et une lettre arabe collées : une espace, comme segment
+      if (ligne && t && ECRITURE_PDF(ligne[ligne.length - 1]) && ECRITURE_PDF(t[0]) &&
+          ECRITURE_PDF(ligne[ligne.length - 1]) !== ECRITURE_PDF(t[0])) ligne += " ";
+      ligne += t;
+    }
+    lignes.push(ligne);
+    pages.push(lignes.map(l => l.replace(/\s+/g, " ").trim()).filter(l => l).join("\n"));
+  }
+  const texte = pages.filter(x => x).join("\n\n");
+  if (!texte) return;
+  e.clipboardData.setData("text/plain", texte);
+  e.preventDefault();
+});
 
 const PIXELS_MAX = 16e6;          // points d'image au plus par page dessinée (limite de Safari sur iPad : 16 777 216)
 const PAGES_GARDEES = 5;          // pages dessinées gardées de part et d'autre de la page courante
