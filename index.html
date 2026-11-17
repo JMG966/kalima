@@ -3,7 +3,7 @@
 =============================================================================
 kalima.html  --  Kalima : recherche de texte dans un document, en français et/ou en arabe
 =============================================================================
-Version du 20261117_1641. Page AUTONOME : elle s'ouvre dans le navigateur
+Version du 20261117_1815. Page AUTONOME : elle s'ouvre dans le navigateur
 (Safari, Chrome, Firefox, Edge ; Mac ou Windows), sans Python, sans
 connexion internet, sans aucun autre fichier. Sur iPad (iPadOS 16.6 ou
 plus récent, écran de 12,9 ou 13 pouces) : publiée en ligne
@@ -30,6 +30,8 @@ Mot arabe, règles du 17/11/2026 : en tête ا ي أ إ آ, au milieu ا و ي �
 ا و ي ى ء أ ؤ ئ, jusqu'à deux par place ; tanwin toléré sur les deux dernières lettres.
 Arabe agrandi de 20 % partout (17/11/2026) : police « Kalima arabe » (unicode-range + size-adjust).
 Clavier arabe à l'écran (17/11/2026) : bouton ع à droite du champ « Mot à chercher ».
+Diacritiques (17/11/2026) : « sans tenir compte des signes » par défaut.
+Pied de page (17/11/2026) : adresse du site au lieu de « Page autonome ».
 
 Ce qu'elle fait, et SEULEMENT cela :
   1. Choix du fichier source .odt, .docx ou .pdf (bouton ou glisser-déposer).
@@ -93,9 +95,11 @@ Ce qu'elle fait, et SEULEMENT cela :
      trouvée. Tanwin toléré sur les deux dernières lettres. Mot entier : pas d'autre lettre arabe juste avant ni juste
      après. Trois façons de traiter les diacritiques (voyelles, tanwin,
      shadda, soukoun, alif suscrit, tatwil) :
-       . « au moins ces signes » (par défaut) : les diacritiques tapés
+       . « au moins ces signes » : les diacritiques tapés
          doivent être présents sur la même lettre ; les autres sont ignorés ;
-       . « sans tenir compte des signes » : seules les lettres comptent ;
+       . « sans tenir compte des signes » (par défaut depuis le 17/11/2026 :
+         le DiSBIAC n'est presque pas vocalisé, 28 mots arabes sur 84 513) :
+         seules les lettres comptent ;
        . « exactement ces signes » : chaque lettre porte exactement les
          diacritiques tapés, ni plus ni moins.
   5. Portée de la recherche (cases de la carte « Mot à chercher » ;
@@ -731,7 +735,7 @@ header .logo { transition: opacity .25s ease; }
   <div class="modal" role="dialog" aria-modal="true" aria-labelledby="titre-apropos">
     <h2 id="titre-apropos">À propos</h2>
     <div class="aide">
-    <p>Version : 20261117_1641</p>
+    <p>Version : 20261117_1815</p>
     <p class="chapeau"><b>Kalima</b> (<span lang="ar" dir="rtl">كلمة</span>, « mot ») recherche et compte les mots, français
       ou arabes, d'un document, et montre chaque occurrence dans son contexte et à sa place dans la page.</p>
     <h3>Son histoire</h3>
@@ -873,9 +877,10 @@ header .logo { transition: opacity .25s ease; }
       s'il n'est pas tapé. Ni féminin ni pluriel. Trois façons de traiter les
       signes (voyelles, tanwin, shadda, soukoun, alif suscrit, tatwil) :</p>
     <ul>
-      <li><b>au moins ces signes</b> (par défaut) : les signes tapés doivent être là, d'autres en plus sont acceptés ;
+      <li><b>au moins ces signes</b> : les signes tapés doivent être là, d'autres en plus sont acceptés ;
         sans aucun signe tapé, toutes les graphies sont trouvées ;</li>
-      <li><b>sans tenir compte des signes</b> : seules les lettres comptent ;</li>
+      <li><b>sans tenir compte des signes</b> (par défaut) : seules les lettres comptent ; كُتِبَ trouve aussi كتب non
+        vocalisé ;</li>
       <li><b>exactement ces signes</b> : ni plus ni moins ; sans aucun signe tapé, seule la forme nue est trouvée.</li>
     </ul>
     <p><b>Portée</b> : par défaut, la recherche se limite au corps du dictionnaire. Trois cases à cocher la règlent,
@@ -1048,8 +1053,8 @@ header .logo { transition: opacity .25s ease; }
       </div>
       <fieldset id="diacritiques" class="choix cache">   <!-- visible seulement si le mot tape est arabe -->
         <legend>Diacritiques (mot arabe)</legend>
-        <label data-bulle="Les signes tapés doivent être là ; d'autres signes en plus sont acceptés. Ex. : ثدًى trouve ثدًى et aussi ثدًّى. Sans aucun signe tapé (ثدى), toutes les graphies sont trouvées."><input type="radio" name="dia" value="saisis" checked> au moins ces signes</label>
-        <label data-bulle="Seules les lettres comptent. Ex. : ثدًى trouve ثدى, ثدًى, ثدًّى…"><input type="radio" name="dia" value="ignorer"> sans tenir compte des signes</label>
+        <label data-bulle="Les signes tapés doivent être là ; d'autres signes en plus sont acceptés. Ex. : ثدًى trouve ثدًى et aussi ثدًّى. Sans aucun signe tapé (ثدى), toutes les graphies sont trouvées."><input type="radio" name="dia" value="saisis"> au moins ces signes</label>
+        <label data-bulle="Seules les lettres comptent. Ex. : ثدًى trouve ثدى, ثدًى, ثدًّى…"><input type="radio" name="dia" value="ignorer" checked> sans tenir compte des signes</label>
         <label data-bulle="Ni plus ni moins que les signes tapés. Ex. : ثدى (sans signe) trouve seulement ثدى nu, pas ثدًى ; ثدًى trouve seulement ثدًى, pas ثدًّى."><input type="radio" name="dia" value="exact"> exactement ces signes</label>
       </fieldset>
       <div id="etatMot" class="etat"></div>
@@ -1110,7 +1115,9 @@ header .logo { transition: opacity .25s ease; }
 </main>
 <div id="bulle"></div>
 <footer>
-  <span>Page autonome — aucune connexion internet nécessaire.</span>
+  <!-- (17/11/2026) ancienne mention « Page autonome — aucune connexion internet nécessaire. »,
+       dépassée depuis la publication sur GitHub Pages -->
+  <span>Kalima en ligne : https://jmg966.github.io/kalima/ — les documents de travail restent sur votre appareil.</span>
   <span>Application à usage libre développée par Jean-Marc Guyetand · Contact : <a href="mailto:jeanmarc.guyetand@gmail.com">jeanmarc.guyetand@gmail.com</a></span>
   <span>Modèle basé sur un code généré par Anthropic Opus 5.5</span>
 </footer>
